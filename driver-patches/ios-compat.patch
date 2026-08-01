@@ -1,0 +1,43 @@
+diff --git a/src/libmongoc/src/mongoc/mongoc-counters-private.h b/src/libmongoc/src/mongoc/mongoc-counters-private.h
+index 68e6615..d06e50f 100644
+--- a/src/libmongoc/src/mongoc/mongoc-counters-private.h
++++ b/src/libmongoc/src/mongoc/mongoc-counters-private.h
+@@ -80,7 +80,13 @@ _mongoc_get_cpu_count(void)
+ #elif defined(__APPLE__) || defined(_AIX)
+    int ncpu;
+ 
++#ifdef _SC_NPROCESSORS_ONLN
+    ncpu = (int)sysconf(_SC_NPROCESSORS_ONLN);
++#else
++   /* iOS does not expose _SC_NPROCESSORS_ONLN. A single counter shard is
++    * correct and avoids relying on unavailable process APIs. */
++   ncpu = 1;
++#endif
+    return (ncpu > 0) ? ncpu : 1;
+ #elif defined(_MSC_VER) || defined(_WIN32)
+    SYSTEM_INFO si;
+diff --git a/src/libmongoc/src/mongoc/mongoc-log.c b/src/libmongoc/src/mongoc/mongoc-log.c
+index 96d5214..275646d 100644
+--- a/src/libmongoc/src/mongoc/mongoc-log.c
++++ b/src/libmongoc/src/mongoc/mongoc-log.c
+@@ -22,6 +22,7 @@
+ #elif defined(__APPLE__)
+ #include <AvailabilityMacros.h>
+ #include <pthread.h>
++#include <unistd.h>
+ #elif defined(__FreeBSD__)
+ #include <sys/thr.h>
+ #elif defined(__NetBSD__)
+@@ -202,7 +203,11 @@ mongoc_log_default_handler(mongoc_log_level_t log_level, const char *log_domain,
+ #elif defined(__NetBSD__)
+    pid = (int)_lwp_self();
+ #elif defined(__APPLE__)
+-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
++#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
++   /* pthread_threadid_np is not exposed to iOS app targets. The process id is
++    * sufficient for the driver's diagnostic log prefix on iOS. */
++   pid = (int)getpid();
++#elif MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+    // libc on macOS < 10.7 does not support `pthread_threadid_np`
+    mach_port_t tid = pthread_mach_thread_np(pthread_self());
+    pid = (int)tid;

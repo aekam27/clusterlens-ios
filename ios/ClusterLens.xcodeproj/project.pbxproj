@@ -1,0 +1,597 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		259E47378F61C8F8B05BFCD1 /* OpenSSLiOS.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2F01227ABDA8931B89FE7783 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E535FFD9514F43B110D291 /* AppModel.swift */; };
+		2F5BFA10043B656654A90EDD /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40AD8AFDEB6911335F957BB3 /* KeychainService.swift */; };
+		417D8ADD310185444055FF87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 710F83D3BE56CBC883ECA263 /* Assets.xcassets */; };
+		46AD990FD5AC10D79C284F08 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7284FB6FB2F8D8278E2681 /* SetupView.swift */; };
+		50C6C1078C3EA003A8F48F31 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9230C2D7EF69FAF6B76DAA /* HistoryView.swift */; };
+		53CA5B632A17B8A14020A7DA /* MongoConnectionString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */; };
+		58C089AE8197A8C93EA8F340 /* QueryWorkbenchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1349860EF9C439BCCB2132E3 /* QueryWorkbenchView.swift */; };
+		64915B94235EDEF50688ABED /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850692AFD88CF70602DC4C71 /* JSONValue.swift */; };
+		78EB4A66AA35761DAB87BADA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D7061447FB8DACCEA15D26 /* SettingsView.swift */; };
+		7E6F13A87843663418EEA9F1 /* MongoBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = 0EDAB9867277F80951BDAD84 /* MongoBridge.c */; };
+		821089F57678FA96112A7DDE /* MongoDirectClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C23029E94896C861969DB84 /* MongoDirectClient.swift */; };
+		869B2D9A1059ADD761D57799 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3056862CD3ED20CDC0FE55F /* MainTabView.swift */; };
+		8A69C8766049FCBD3819A5EB /* BrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA88658B68633C55A9A7DFC4 /* BrowseView.swift */; };
+		98E4EF688F57C217D47C6B10 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125C8C3FFDEB00F7B8E405CA /* Theme.swift */; };
+		993B91D48966D5954870A8BF /* MongoCDriver.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */; };
+		B733970DD893104DF4FD1428 /* OpenSSLiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */; };
+		BD179881220EEEAEBA925A16 /* ClusterLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */; };
+		D339426C920D7D1CBD6ED9C9 /* ClusterLensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */; };
+		D3849354D7ADC1DAF6F2A1B7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E679A959603140B8563E7F2 /* Models.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9EC5488ED82CF82E283CBE88 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DBBA611095A790B712A8B69F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B683DD4C496BB9D5EE748E8E;
+			remoteInfo = ClusterLens;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7997F15FEA1F1538557B1551 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				259E47378F61C8F8B05BFCD1 /* OpenSSLiOS.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0EDAB9867277F80951BDAD84 /* MongoBridge.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = MongoBridge.c; sourceTree = "<group>"; };
+		125C8C3FFDEB00F7B8E405CA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		1349860EF9C439BCCB2132E3 /* QueryWorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryWorkbenchView.swift; sourceTree = "<group>"; };
+		40AD8AFDEB6911335F957BB3 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		4A21F9E8593E010B247517D7 /* ClusterLensTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ClusterLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MongoConnectionString.swift; sourceTree = "<group>"; };
+		62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensTests.swift; sourceTree = "<group>"; };
+		68E535FFD9514F43B110D291 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		710F83D3BE56CBC883ECA263 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MongoCDriver.xcframework; path = Vendor/MongoCDriver.xcframework; sourceTree = "<group>"; };
+		850692AFD88CF70602DC4C71 /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
+		8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenSSLiOS.xcframework; path = Vendor/OpenSSLiOS.xcframework; sourceTree = "<group>"; };
+		8E7284FB6FB2F8D8278E2681 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		9C23029E94896C861969DB84 /* MongoDirectClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MongoDirectClient.swift; sourceTree = "<group>"; };
+		9E679A959603140B8563E7F2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensApp.swift; sourceTree = "<group>"; };
+		B3056862CD3ED20CDC0FE55F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		C9CC5F83F348A1D9ED2FDBF7 /* MongoBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MongoBridge.h; sourceTree = "<group>"; };
+		DD0AA3E24C40E482F50638F3 /* ClusterLens.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ClusterLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA88658B68633C55A9A7DFC4 /* BrowseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseView.swift; sourceTree = "<group>"; };
+		ED9230C2D7EF69FAF6B76DAA /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		F6D7061447FB8DACCEA15D26 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9437D5A07CD269EE7F74B46F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				993B91D48966D5954870A8BF /* MongoCDriver.xcframework in Frameworks */,
+				B733970DD893104DF4FD1428 /* OpenSSLiOS.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A807BBAD0B78D548C95805E /* ClusterLens */ = {
+			isa = PBXGroup;
+			children = (
+				659FA3996FEA5151F10CD295 /* App */,
+				961D904F8FA5AB5217F4EA85 /* Core */,
+				AC29CB77BC2CAB0953945FD3 /* Features */,
+				FD0FAE6B12CFC012824AA496 /* Resources */,
+			);
+			path = ClusterLens;
+			sourceTree = "<group>";
+		};
+		227667E704A3D1919BE4BF22 /* Query */ = {
+			isa = PBXGroup;
+			children = (
+				1349860EF9C439BCCB2132E3 /* QueryWorkbenchView.swift */,
+			);
+			path = Query;
+			sourceTree = "<group>";
+		};
+		4A50D2AE1EF8A1506C90948A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				F6D7061447FB8DACCEA15D26 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		659FA3996FEA5151F10CD295 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */,
+				B3056862CD3ED20CDC0FE55F /* MainTabView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		961D904F8FA5AB5217F4EA85 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				68E535FFD9514F43B110D291 /* AppModel.swift */,
+				850692AFD88CF70602DC4C71 /* JSONValue.swift */,
+				40AD8AFDEB6911335F957BB3 /* KeychainService.swift */,
+				9E679A959603140B8563E7F2 /* Models.swift */,
+				0EDAB9867277F80951BDAD84 /* MongoBridge.c */,
+				C9CC5F83F348A1D9ED2FDBF7 /* MongoBridge.h */,
+				5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */,
+				9C23029E94896C861969DB84 /* MongoDirectClient.swift */,
+				125C8C3FFDEB00F7B8E405CA /* Theme.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		AC29CB77BC2CAB0953945FD3 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				B86230877452DC05F40DC4A7 /* Browse */,
+				D2F5555CE02C75B0046F1A30 /* History */,
+				227667E704A3D1919BE4BF22 /* Query */,
+				4A50D2AE1EF8A1506C90948A /* Settings */,
+				E25905DFA07FEFC31D2FFFDA /* Setup */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		B86230877452DC05F40DC4A7 /* Browse */ = {
+			isa = PBXGroup;
+			children = (
+				EA88658B68633C55A9A7DFC4 /* BrowseView.swift */,
+			);
+			path = Browse;
+			sourceTree = "<group>";
+		};
+		D0AE4369DD688ED0AF9185B5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */,
+				8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D2F5555CE02C75B0046F1A30 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				ED9230C2D7EF69FAF6B76DAA /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		D9218D367668A17D972E526D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DD0AA3E24C40E482F50638F3 /* ClusterLens.app */,
+				4A21F9E8593E010B247517D7 /* ClusterLensTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E25905DFA07FEFC31D2FFFDA /* Setup */ = {
+			isa = PBXGroup;
+			children = (
+				8E7284FB6FB2F8D8278E2681 /* SetupView.swift */,
+			);
+			path = Setup;
+			sourceTree = "<group>";
+		};
+		FC6E330F9613FAE3B0DBBBFF = {
+			isa = PBXGroup;
+			children = (
+				0A807BBAD0B78D548C95805E /* ClusterLens */,
+				FC920F7DDF8F1FB5A08AF231 /* ClusterLensTests */,
+				D0AE4369DD688ED0AF9185B5 /* Frameworks */,
+				D9218D367668A17D972E526D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FC920F7DDF8F1FB5A08AF231 /* ClusterLensTests */ = {
+			isa = PBXGroup;
+			children = (
+				62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */,
+			);
+			path = ClusterLensTests;
+			sourceTree = "<group>";
+		};
+		FD0FAE6B12CFC012824AA496 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				710F83D3BE56CBC883ECA263 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		81369D21A4B8A49152B1B6A3 /* ClusterLensTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7D4F62E8D6189CA699EE0EA /* Build configuration list for PBXNativeTarget "ClusterLensTests" */;
+			buildPhases = (
+				146F7888021DB53D737A9E6A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FBC54B31901BFBA96876AD20 /* PBXTargetDependency */,
+			);
+			name = ClusterLensTests;
+			packageProductDependencies = (
+			);
+			productName = ClusterLensTests;
+			productReference = 4A21F9E8593E010B247517D7 /* ClusterLensTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B683DD4C496BB9D5EE748E8E /* ClusterLens */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3EB28BBE3F840C7FE75229B7 /* Build configuration list for PBXNativeTarget "ClusterLens" */;
+			buildPhases = (
+				1C7B9DAFF5EA0634719EBEA9 /* Sources */,
+				9B552373802FC63718978B4C /* Resources */,
+				9437D5A07CD269EE7F74B46F /* Frameworks */,
+				7997F15FEA1F1538557B1551 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClusterLens;
+			packageProductDependencies = (
+			);
+			productName = ClusterLens;
+			productReference = DD0AA3E24C40E482F50638F3 /* ClusterLens.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DBBA611095A790B712A8B69F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					81369D21A4B8A49152B1B6A3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					B683DD4C496BB9D5EE748E8E = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 280512F3A9B7F566052F1C31 /* Build configuration list for PBXProject "ClusterLens" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FC6E330F9613FAE3B0DBBBFF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D9218D367668A17D972E526D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B683DD4C496BB9D5EE748E8E /* ClusterLens */,
+				81369D21A4B8A49152B1B6A3 /* ClusterLensTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9B552373802FC63718978B4C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				417D8ADD310185444055FF87 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		146F7888021DB53D737A9E6A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D339426C920D7D1CBD6ED9C9 /* ClusterLensTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1C7B9DAFF5EA0634719EBEA9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F01227ABDA8931B89FE7783 /* AppModel.swift in Sources */,
+				8A69C8766049FCBD3819A5EB /* BrowseView.swift in Sources */,
+				BD179881220EEEAEBA925A16 /* ClusterLensApp.swift in Sources */,
+				50C6C1078C3EA003A8F48F31 /* HistoryView.swift in Sources */,
+				64915B94235EDEF50688ABED /* JSONValue.swift in Sources */,
+				2F5BFA10043B656654A90EDD /* KeychainService.swift in Sources */,
+				869B2D9A1059ADD761D57799 /* MainTabView.swift in Sources */,
+				D3849354D7ADC1DAF6F2A1B7 /* Models.swift in Sources */,
+				7E6F13A87843663418EEA9F1 /* MongoBridge.c in Sources */,
+				53CA5B632A17B8A14020A7DA /* MongoConnectionString.swift in Sources */,
+				821089F57678FA96112A7DDE /* MongoDirectClient.swift in Sources */,
+				58C089AE8197A8C93EA8F340 /* QueryWorkbenchView.swift in Sources */,
+				78EB4A66AA35761DAB87BADA /* SettingsView.swift in Sources */,
+				46AD990FD5AC10D79C284F08 /* SetupView.swift in Sources */,
+				98E4EF688F57C217D47C6B10 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FBC54B31901BFBA96876AD20 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B683DD4C496BB9D5EE748E8E /* ClusterLens */;
+			targetProxy = 9EC5488ED82CF82E283CBE88 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		01DC0E6DFFD3DF16506C3BF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				INFOPLIST_FILE = ClusterLens/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLens;
+				PRODUCT_NAME = ClusterLens;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = ClusterLens/Core/MongoBridge.h;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3076E18953D19A4FAFC0D3AF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				INFOPLIST_FILE = ClusterLens/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLens;
+				PRODUCT_NAME = ClusterLens;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = ClusterLens/Core/MongoBridge.h;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		42C9D00CF08E36C7FF212FAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		877CD9BC8FBCDFB0CA287EAE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLensTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClusterLens.app/ClusterLens";
+			};
+			name = Debug;
+		};
+		A523CD1332746773EF930485 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E2D6E8D53B9D8BBA0A871E3A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLensTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClusterLens.app/ClusterLens";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		280512F3A9B7F566052F1C31 /* Build configuration list for PBXProject "ClusterLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A523CD1332746773EF930485 /* Debug */,
+				42C9D00CF08E36C7FF212FAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3EB28BBE3F840C7FE75229B7 /* Build configuration list for PBXNativeTarget "ClusterLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01DC0E6DFFD3DF16506C3BF0 /* Debug */,
+				3076E18953D19A4FAFC0D3AF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F7D4F62E8D6189CA699EE0EA /* Build configuration list for PBXNativeTarget "ClusterLensTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				877CD9BC8FBCDFB0CA287EAE /* Debug */,
+				E2D6E8D53B9D8BBA0A871E3A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DBBA611095A790B712A8B69F /* Project object */;
+}

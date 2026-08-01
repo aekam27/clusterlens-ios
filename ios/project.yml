@@ -1,0 +1,78 @@
+name: ClusterLens
+options:
+  bundleIdPrefix: com.aekam
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  ClusterLens:
+    type: application
+    platform: iOS
+    dependencies:
+      - framework: Vendor/MongoCDriver.xcframework
+        embed: false
+      - framework: Vendor/OpenSSLiOS.xcframework
+        embed: true
+    sources:
+      - path: ClusterLens
+        excludes:
+          - Resources/Info.plist
+    resources:
+      - path: ClusterLens/Resources/Assets.xcassets
+    info:
+      path: ClusterLens/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: ClusterLens
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSFaceIDUsageDescription: ClusterLens uses Face ID to unlock write queries.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aekam.ClusterLens
+        PRODUCT_NAME: ClusterLens
+        MARKETING_VERSION: 0.2.0
+        CURRENT_PROJECT_VERSION: 1
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_OBJC_BRIDGING_HEADER: ClusterLens/Core/MongoBridge.h
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@executable_path/Frameworks"
+  ClusterLensTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - ClusterLensTests
+    dependencies:
+      - target: ClusterLens
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aekam.ClusterLensTests
+schemes:
+  ClusterLens:
+    build:
+      targets:
+        ClusterLens: all
+        ClusterLensTests: [test]
+    test:
+      targets:
+        - ClusterLensTests
