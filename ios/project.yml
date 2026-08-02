@@ -24,6 +24,7 @@ targets:
           - Resources/Info.plist
     resources:
       - path: ClusterLens/Resources/Assets.xcassets
+      - path: ClusterLens/Resources/cacert.pem
     info:
       path: ClusterLens/Resources/Info.plist
       properties:
@@ -48,7 +49,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aekam.ClusterLens
         PRODUCT_NAME: ClusterLens
-        MARKETING_VERSION: 0.2.0
+        MARKETING_VERSION: 0.3.0
         CURRENT_PROJECT_VERSION: 1
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

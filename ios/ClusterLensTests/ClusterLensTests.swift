@@ -2,6 +2,51 @@ import XCTest
 @testable import ClusterLens
 
 final class ClusterLensTests: XCTestCase {
+    func testBundledCertificateAuthorityStoreIsPresent() throws {
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "cacert", withExtension: "pem"))
+        let contents = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(contents.contains("-----BEGIN CERTIFICATE-----"))
+        XCTAssertTrue(contents.contains("-----END CERTIFICATE-----"))
+    }
+
+    func testSavedConnectionMetadataContainsNoCredentials() throws {
+        let profile = ConnectionProfile(
+            id: UUID(uuidString: "B544DDC7-76C8-4515-9945-881E9784A9DA")!,
+            name: "Production",
+            host: "cluster.example.mongodb.net",
+            usesSRV: true
+        )
+        let text = String(decoding: try JSONEncoder().encode(profile), as: UTF8.self)
+        XCTAssertTrue(text.contains("cluster.example.mongodb.net"))
+        XCTAssertFalse(text.contains("mongodb+srv://"))
+        XCTAssertFalse(text.lowercased().contains("password"))
+    }
+
+    func testLegacyHistoryWithoutConnectionIDStillDecodes() throws {
+        let source = """
+        [{
+          "id": "EFC54597-6AA1-4175-BF8A-A69EDE7DB0F4",
+          "date": 0,
+          "database": "app",
+          "collection": "users",
+          "operation": "find",
+          "input": "{}",
+          "elapsedMS": 4.2
+        }]
+        """
+        let entries = try JSONDecoder().decode([QueryHistoryEntry].self, from: Data(source.utf8))
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertNil(entries[0].connectionID)
+    }
+
+    func testConnectionStatusTracksIndependentLiveSessions() {
+        let first = UUID()
+        let second = UUID()
+        let states: [UUID: ConnectionStatus] = [first: .connected, second: .saved]
+        XCTAssertTrue(states[first]?.isConnected == true)
+        XCTAssertFalse(states[second]?.isConnected == true)
+    }
+
     func testEveryQueryTemplateIsAJSONObject() throws {
         for operation in QueryOperation.allCases {
             let data = try XCTUnwrap(operation.template.data(using: .utf8))

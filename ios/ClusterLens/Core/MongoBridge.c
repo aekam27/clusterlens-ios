@@ -227,7 +227,7 @@ cl_wrap_execution(const char *operation, double started_at, char *result_json)
 }
 
 CLMongoClientRef
-cl_mongo_connect(const char *uri_text, char **error_message)
+cl_mongo_connect(const char *uri_text, const char *ca_file, char **error_message)
 {
    if (error_message) {
       *error_message = NULL;
@@ -244,6 +244,19 @@ cl_mongo_connect(const char *uri_text, char **error_message)
    if (!uri) {
       cl_set_error(error_message, "Invalid MongoDB connection string: %s", error.message);
       return NULL;
+   }
+
+   if (mongoc_uri_get_tls(uri)) {
+      if (!ca_file || ca_file[0] == '\0') {
+         cl_set_error(error_message, "The bundled TLS certificate store is unavailable.");
+         mongoc_uri_destroy(uri);
+         return NULL;
+      }
+      if (!mongoc_uri_set_option_as_utf8(uri, MONGOC_URI_TLSCAFILE, ca_file)) {
+         cl_set_error(error_message, "MongoDB could not configure the TLS certificate store.");
+         mongoc_uri_destroy(uri);
+         return NULL;
+      }
    }
 
    if (mongoc_uri_get_option_as_int32(uri, MONGOC_URI_SERVERSELECTIONTIMEOUTMS, -1) < 0) {

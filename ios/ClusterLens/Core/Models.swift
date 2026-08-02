@@ -14,6 +14,23 @@ struct ConnectionProfile: Codable, Identifiable, Equatable {
     }
 }
 
+enum ConnectionStatus: Equatable {
+    case saved
+    case connecting
+    case connected
+    case failed(String)
+
+    var isConnected: Bool {
+        if case .connected = self { return true }
+        return false
+    }
+
+    var message: String? {
+        if case .failed(let message) = self { return message }
+        return nil
+    }
+}
+
 struct DatabaseInfo: Codable, Identifiable, Hashable {
     let name: String
     var id: String { name }
@@ -142,10 +159,31 @@ enum QueryOperation: String, Codable, CaseIterable, Identifiable {
 
 struct QueryHistoryEntry: Codable, Identifiable, Hashable {
     let id: UUID
+    let connectionID: UUID?
     let date: Date
     let database: String
     let collection: String
     let operation: QueryOperation
     let input: String
     let elapsedMS: Double
+
+    init(
+        id: UUID,
+        connectionID: UUID? = nil,
+        date: Date,
+        database: String,
+        collection: String,
+        operation: QueryOperation,
+        input: String,
+        elapsedMS: Double
+    ) {
+        self.id = id
+        self.connectionID = connectionID
+        self.date = date
+        self.database = database
+        self.collection = collection
+        self.operation = operation
+        self.input = input
+        self.elapsedMS = elapsedMS
+    }
 }

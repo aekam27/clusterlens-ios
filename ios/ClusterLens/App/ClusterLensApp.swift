@@ -26,13 +26,13 @@ private struct RootView: View {
         Group {
             if model.isBootstrapping {
                 LaunchView()
-            } else if model.profile == nil {
+            } else if model.profiles.isEmpty {
                 SetupView()
             } else {
                 MainTabView()
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: model.profile?.id)
+        .animation(.easeInOut(duration: 0.2), value: model.activeProfileID)
     }
 }
 

@@ -4,8 +4,9 @@ ClusterLens connects an iPhone directly to MongoDB. That is convenient, but it p
 
 ## Secrets
 
-- The complete MongoDB connection string is stored in the iOS Keychain with this-device-only accessibility.
-- The saved connection profile contains only the friendly name, hostname, and discovery type—not the username or password.
+- Every complete MongoDB connection string is stored as a separate iOS Keychain item with this-device-only accessibility and synchronization explicitly disabled.
+- Saved connection profiles contain only the friendly name, hostname, discovery type, and random connection ID—not usernames or passwords.
+- The profile index and query history use complete file protection and are excluded from device backups.
 - Connection strings are never added to query history or normal UI labels.
 - `.env`, build products, Xcode user data, and local dependency build directories are excluded from source packages.
 
@@ -21,14 +22,14 @@ ClusterLens connects an iPhone directly to MongoDB. That is convenient, but it p
 - Find and aggregation output is capped before it reaches SwiftUI.
 - Write operations are hidden until device-owner authentication succeeds.
 - Every write requires a separate confirmation.
-- Write access relocks when the app leaves the foreground.
+- Write access relocks when the app leaves the foreground or switches connections.
 - MongoDB roles remain the final authorization boundary; biometrics do not add server-side permission.
 
 ## Recommended deployment
 
 - Create a dedicated, least-privilege MongoDB user.
 - Prefer read-only roles and a non-production cluster.
-- Rotate the database password if the device is lost or the app backup is exposed.
+- Rotate every saved database password if the device is lost or compromised.
 - Keep iOS, the MongoDB driver, and OpenSSL updated.
 - Avoid `0.0.0.0/0` in the Atlas IP access list.
 - Commission an external security review before handling production data.

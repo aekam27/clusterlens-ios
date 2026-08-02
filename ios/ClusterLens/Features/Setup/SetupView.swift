@@ -1,12 +1,24 @@
 import SwiftUI
 
+enum ConnectionSetupMode: Equatable {
+    case firstConnection
+    case additionalConnection
+}
+
 struct SetupView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var name = "My Cluster"
+    @Environment(\.dismiss) private var dismiss
+    let mode: ConnectionSetupMode
+    @State private var name: String
     @State private var connectionString = ""
     @State private var revealsConnectionString = false
     @State private var isConnecting = false
     @State private var errorMessage: String?
+
+    init(mode: ConnectionSetupMode = .firstConnection) {
+        self.mode = mode
+        _name = State(initialValue: mode == .firstConnection ? "My Cluster" : "New Cluster")
+    }
 
     var body: some View {
         NavigationStack {
@@ -14,10 +26,12 @@ struct SetupView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 16) {
                         AppMark(size: 72)
-                        Text("Your cluster,\nin your pocket.")
+                        Text(mode == .firstConnection ? "Your clusters,\nin your pocket." : "Add another\nconnection.")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .tracking(-0.8)
-                        Text("Connect straight to MongoDB, browse databases, and run queries from your iPhone—no gateway required.")
+                        Text(mode == .firstConnection
+                             ? "Connect straight to MongoDB, keep multiple live sessions, and move between them without a gateway."
+                             : "Save another MongoDB connection securely on this iPhone and switch to it instantly.")
                             .font(.body)
                             .foregroundStyle(.secondary)
                             .lineSpacing(3)
@@ -70,7 +84,7 @@ struct SetupView: View {
                             } label: {
                                 HStack {
                                     if isConnecting { ProgressView().tint(.white) }
-                                    Text(isConnecting ? "Connecting to MongoDB…" : "Connect directly")
+                                    Text(isConnecting ? "Connecting to MongoDB…" : "Save & connect")
                                 }
                                 .frame(maxWidth: .infinity)
                             }
@@ -81,7 +95,8 @@ struct SetupView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Label("Your full connection string is stored only in the iOS Keychain.", systemImage: "key.fill")
+                        Label("Every connection string stays in this iPhone's device-bound Keychain.", systemImage: "key.fill")
+                        Label("Saved connection metadata is excluded from device backups.", systemImage: "externaldrive.badge.xmark")
                         Label("Atlas must allow this iPhone's current public IP in Network Access.", systemImage: "network.badge.shield.half.filled")
                         Label("Use a dedicated database user with the minimum permissions you need.", systemImage: "person.badge.shield.checkmark")
                     }
@@ -92,7 +107,16 @@ struct SetupView: View {
                 .padding(22)
             }
             .background(Color(.systemGroupedBackground))
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle(mode == .additionalConnection ? "Add Connection" : "")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(mode == .firstConnection ? .hidden : .visible, for: .navigationBar)
+            .toolbar {
+                if mode == .additionalConnection {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+            }
         }
     }
 
@@ -102,6 +126,8 @@ struct SetupView: View {
         defer { isConnecting = false }
         do {
             try await model.connect(name: name, connectionString: connectionString)
+            connectionString = ""
+            if mode == .additionalConnection { dismiss() }
         } catch {
             errorMessage = error.localizedDescription
         }
