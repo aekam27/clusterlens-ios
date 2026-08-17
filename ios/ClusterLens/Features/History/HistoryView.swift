@@ -7,14 +7,14 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if model.history.isEmpty {
+                if model.activeHistory.isEmpty {
                     ContentUnavailableView(
                         "No query history",
                         systemImage: "clock.arrow.circlepath",
                         description: Text("Successful queries appear here and stay protected by iOS file encryption.")
                     )
                 } else {
-                    List(model.history) { entry in
+                    List(model.activeHistory) { entry in
                         NavigationLink {
                             QueryWorkbenchView(
                                 database: entry.database,
@@ -52,7 +52,7 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .toolbar {
-                if !model.history.isEmpty {
+                if !model.activeHistory.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Clear") { confirmClear = true }
                     }

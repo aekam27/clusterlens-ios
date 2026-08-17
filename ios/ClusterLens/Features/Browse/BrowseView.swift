@@ -2,24 +2,44 @@ import SwiftUI
 
 struct BrowseView: View {
     @EnvironmentObject private var model: AppModel
+    @State private var showsConnections = false
 
     var body: some View {
         NavigationStack {
             List {
                 if let profile = model.profile {
                     Section {
-                        HStack(spacing: 12) {
-                            AppMark(size: 42)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(profile.name).font(.headline)
-                                Text(profile.host)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
+                        Button {
+                            showsConnections = true
+                        } label: {
+                            HStack(spacing: 12) {
+                                AppMark(size: 42)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    HStack(spacing: 6) {
+                                        Text(profile.name).font(.headline)
+                                        if model.profiles.count > 1 {
+                                            Text("\(model.profiles.count)")
+                                                .font(.caption2.bold())
+                                                .foregroundStyle(.tint)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(Color.accentColor.opacity(0.1), in: Capsule())
+                                        }
+                                    }
+                                    Text(profile.host)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                                connectionStatus
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
                             }
-                            Spacer()
-                            StatusPill(title: "Connected", color: .green)
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         .padding(.vertical, 3)
                     }
                 }
@@ -33,13 +53,29 @@ struct BrowseView: View {
                 }
 
                 Section("Databases") {
-                    if model.databases.isEmpty && model.globalError == nil {
+                    if case .connecting = model.activeConnectionStatus, model.databases.isEmpty {
                         HStack {
                             Spacer()
-                            ProgressView("Loading databases…")
+                            ProgressView("Connecting…")
                             Spacer()
                         }
                         .padding(.vertical, 20)
+                    } else if !model.activeConnectionStatus.isConnected {
+                        Button {
+                            if let id = model.activeProfileID {
+                                Task { await model.reconnect(id) }
+                            }
+                        } label: {
+                            Label("Reconnect", systemImage: "arrow.clockwise")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .padding(.vertical, 10)
+                    } else if model.databases.isEmpty {
+                        ContentUnavailableView(
+                            "No databases",
+                            systemImage: "cylinder",
+                            description: Text("This MongoDB user may not have access to any databases.")
+                        )
                     } else {
                         ForEach(model.databases) { database in
                             NavigationLink {
@@ -55,13 +91,37 @@ struct BrowseView: View {
             }
             .navigationTitle("Browse")
             .refreshable { await model.refreshDatabases() }
+            .sheet(isPresented: $showsConnections) {
+                ConnectionManagerView()
+                    .environmentObject(model)
+            }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showsConnections = true } label: {
+                        Image(systemName: "server.rack")
+                    }
+                    .accessibilityLabel("Manage connections")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { Task { await model.refreshDatabases() } } label: {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var connectionStatus: some View {
+        switch model.activeConnectionStatus {
+        case .saved:
+            StatusPill(title: "Saved", color: .secondary)
+        case .connecting:
+            ProgressView().controlSize(.small)
+        case .connected:
+            StatusPill(title: "Connected", color: .green)
+        case .failed:
+            StatusPill(title: "Offline", color: .orange)
         }
     }
 }

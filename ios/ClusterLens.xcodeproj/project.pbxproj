@@ -11,6 +11,7 @@
 		2F01227ABDA8931B89FE7783 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E535FFD9514F43B110D291 /* AppModel.swift */; };
 		2F5BFA10043B656654A90EDD /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40AD8AFDEB6911335F957BB3 /* KeychainService.swift */; };
 		417D8ADD310185444055FF87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 710F83D3BE56CBC883ECA263 /* Assets.xcassets */; };
+		A1B2C3D4E5F60718293A4B5D /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* cacert.pem */; };
 		46AD990FD5AC10D79C284F08 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7284FB6FB2F8D8278E2681 /* SetupView.swift */; };
 		50C6C1078C3EA003A8F48F31 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9230C2D7EF69FAF6B76DAA /* HistoryView.swift */; };
 		53CA5B632A17B8A14020A7DA /* MongoConnectionString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */; };
@@ -25,6 +26,7 @@
 		993B91D48966D5954870A8BF /* MongoCDriver.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */; };
 		B733970DD893104DF4FD1428 /* OpenSSLiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */; };
 		BD179881220EEEAEBA925A16 /* ClusterLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */; };
+		C0DEC0DEC0DEC0DEC0DEC002 /* ConnectionManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEC0DEC0DEC0DEC0DEC001 /* ConnectionManagerView.swift */; };
 		D339426C920D7D1CBD6ED9C9 /* ClusterLensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */; };
 		D3849354D7ADC1DAF6F2A1B7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E679A959603140B8563E7F2 /* Models.swift */; };
 /* End PBXBuildFile section */
@@ -63,6 +65,7 @@
 		62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensTests.swift; sourceTree = "<group>"; };
 		68E535FFD9514F43B110D291 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		710F83D3BE56CBC883ECA263 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
 		7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MongoCDriver.xcframework; path = Vendor/MongoCDriver.xcframework; sourceTree = "<group>"; };
 		850692AFD88CF70602DC4C71 /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
 		8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenSSLiOS.xcframework; path = Vendor/OpenSSLiOS.xcframework; sourceTree = "<group>"; };
@@ -71,6 +74,7 @@
 		9E679A959603140B8563E7F2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensApp.swift; sourceTree = "<group>"; };
 		B3056862CD3ED20CDC0FE55F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		C0DEC0DEC0DEC0DEC0DEC001 /* ConnectionManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManagerView.swift; sourceTree = "<group>"; };
 		C9CC5F83F348A1D9ED2FDBF7 /* MongoBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MongoBridge.h; sourceTree = "<group>"; };
 		DD0AA3E24C40E482F50638F3 /* ClusterLens.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ClusterLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA88658B68633C55A9A7DFC4 /* BrowseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowseView.swift; sourceTree = "<group>"; };
@@ -147,6 +151,7 @@
 			isa = PBXGroup;
 			children = (
 				B86230877452DC05F40DC4A7 /* Browse */,
+				C0DEC0DEC0DEC0DEC0DEC003 /* Connections */,
 				D2F5555CE02C75B0046F1A30 /* History */,
 				227667E704A3D1919BE4BF22 /* Query */,
 				4A50D2AE1EF8A1506C90948A /* Settings */,
@@ -161,6 +166,14 @@
 				EA88658B68633C55A9A7DFC4 /* BrowseView.swift */,
 			);
 			path = Browse;
+			sourceTree = "<group>";
+		};
+		C0DEC0DEC0DEC0DEC0DEC003 /* Connections */ = {
+			isa = PBXGroup;
+			children = (
+				C0DEC0DEC0DEC0DEC0DEC001 /* ConnectionManagerView.swift */,
+			);
+			path = Connections;
 			sourceTree = "<group>";
 		};
 		D0AE4369DD688ED0AF9185B5 /* Frameworks */ = {
@@ -219,6 +232,7 @@
 			isa = PBXGroup;
 			children = (
 				710F83D3BE56CBC883ECA263 /* Assets.xcassets */,
+				A1B2C3D4E5F60718293A4B5C /* cacert.pem */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -309,6 +323,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				417D8ADD310185444055FF87 /* Assets.xcassets in Resources */,
+				A1B2C3D4E5F60718293A4B5D /* cacert.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,6 +345,7 @@
 				2F01227ABDA8931B89FE7783 /* AppModel.swift in Sources */,
 				8A69C8766049FCBD3819A5EB /* BrowseView.swift in Sources */,
 				BD179881220EEEAEBA925A16 /* ClusterLensApp.swift in Sources */,
+				C0DEC0DEC0DEC0DEC0DEC002 /* ConnectionManagerView.swift in Sources */,
 				50C6C1078C3EA003A8F48F31 /* HistoryView.swift in Sources */,
 				64915B94235EDEF50688ABED /* JSONValue.swift in Sources */,
 				2F5BFA10043B656654A90EDD /* KeychainService.swift in Sources */,
@@ -363,6 +379,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"Vendor\"",
@@ -372,7 +389,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLens;
 				PRODUCT_NAME = ClusterLens;
 				SDKROOT = iphoneos;
@@ -388,6 +405,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"Vendor\"",
@@ -397,7 +415,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLens;
 				PRODUCT_NAME = ClusterLens;
 				SDKROOT = iphoneos;

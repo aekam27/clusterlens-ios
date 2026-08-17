@@ -11,9 +11,14 @@ actor MongoDirectClient {
 
     func connect(uri: String) async throws {
         let expanded = try await MongoConnectionString.expanded(uri)
+        guard let certificateStore = Bundle.main.path(forResource: "cacert", ofType: "pem") else {
+            throw ClientError.missingCertificateStore
+        }
         var errorPointer: UnsafeMutablePointer<CChar>?
-        let newHandle = expanded.withCString { pointer in
-            cl_mongo_connect(pointer, &errorPointer)
+        let newHandle = expanded.withCString { uriPointer in
+            certificateStore.withCString { certificateStorePointer in
+                cl_mongo_connect(uriPointer, certificateStorePointer, &errorPointer)
+            }
         }
         guard let newHandle else {
             throw ClientError.mongo(takeError(errorPointer) ?? "MongoDB rejected the connection string.")
@@ -103,6 +108,7 @@ actor MongoDirectClient {
 enum ClientError: LocalizedError {
     case invalidConnectionString
     case invalidResponse
+    case missingCertificateStore
     case notConnected
     case mongo(String)
     case encoding
@@ -111,6 +117,7 @@ enum ClientError: LocalizedError {
         switch self {
         case .invalidConnectionString: "The MongoDB connection string is invalid."
         case .invalidResponse: "MongoDB returned a result the app could not decode."
+        case .missingCertificateStore: "ClusterLens could not load its TLS certificate store. Reinstall the app and try again."
         case .notConnected: "Connect to a MongoDB cluster first."
         case .mongo(let message): message
         case .encoding: "The query could not be encoded."

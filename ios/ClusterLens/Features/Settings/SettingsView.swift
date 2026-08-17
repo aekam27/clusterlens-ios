@@ -3,7 +3,9 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @State private var authError: String?
-    @State private var confirmDisconnect = false
+    @State private var showsConnections = false
+    @State private var confirmDisconnectSession = false
+    @State private var confirmRemoval = false
 
     var body: some View {
         NavigationStack {
@@ -17,6 +19,10 @@ struct SettingsView: View {
                                 .lineLimit(1)
                         }
                         LabeledContent("Discovery", value: profile.usesSRV ? "DNS SRV" : "Seed hosts")
+                        LabeledContent("Status", value: connectionStatusTitle)
+                        Button("Manage \(model.profiles.count) saved connection\(model.profiles.count == 1 ? "" : "s")") {
+                            showsConnections = true
+                        }
                     }
                 }
 
@@ -48,30 +54,67 @@ struct SettingsView: View {
                 }
 
                 Section("Privacy") {
-                    Label("Connection string stored in Keychain", systemImage: "key.fill")
-                    Label("History uses complete file protection", systemImage: "lock.doc.fill")
+                    Label("URIs stored in the device-bound Keychain", systemImage: "key.fill")
+                    Label("Profiles and history excluded from backups", systemImage: "externaldrive.badge.xmark")
+                    Label("Local files use complete protection", systemImage: "lock.doc.fill")
                     Label("No proxy or gateway involved", systemImage: "arrow.left.arrow.right")
                 }
 
                 Section("About") {
-                    LabeledContent("Version", value: "0.2.0")
+                    LabeledContent("Version", value: "0.3.0")
                     LabeledContent("Client", value: "Native SwiftUI")
                     LabeledContent("Transport", value: "MongoDB wire protocol + TLS")
                 }
 
                 Section {
-                    Button("Disconnect cluster", role: .destructive) {
-                        confirmDisconnect = true
+                    if model.activeConnectionStatus.isConnected {
+                        Button("Disconnect active session") {
+                            confirmDisconnectSession = true
+                        }
+                    } else if let id = model.activeProfileID {
+                        Button("Reconnect active session") {
+                            Task { await model.reconnect(id) }
+                        }
+                    }
+                    Button("Remove saved connection", role: .destructive) {
+                        confirmRemoval = true
                     }
                 }
             }
             .navigationTitle("Settings")
-            .confirmationDialog("Disconnect this cluster?", isPresented: $confirmDisconnect) {
-                Button("Disconnect", role: .destructive, action: model.disconnect)
+            .sheet(isPresented: $showsConnections) {
+                ConnectionManagerView()
+                    .environmentObject(model)
+            }
+            .confirmationDialog("Disconnect this session?", isPresented: $confirmDisconnectSession) {
+                Button("Disconnect") {
+                    if let id = model.activeProfileID {
+                        Task { await model.disconnectSession(id) }
+                    }
+                }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                Text("The connection string will be removed from this iPhone. Query history is retained until you clear it.")
+                Text("The connection remains saved on this iPhone and can be reconnected later.")
             }
+            .confirmationDialog("Remove this saved connection?", isPresented: $confirmRemoval) {
+                Button("Remove from this iPhone", role: .destructive) {
+                    if let id = model.activeProfileID {
+                        Task { await model.removeConnection(id) }
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This permanently deletes its URI from the Keychain and removes its local query history.")
+            }
+        }
+    }
+
+    private var connectionStatusTitle: String {
+        switch model.activeConnectionStatus {
+        case .saved: "Saved"
+        case .connecting: "Connecting"
+        case .connected: "Connected"
+        case .failed: "Needs attention"
         }
     }
 

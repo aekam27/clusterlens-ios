@@ -15,3 +15,9 @@ OpenSSL binaries are distributed through the OpenSSL XCFramework maintained by M
 Binary package: <https://github.com/krzyzanowskim/OpenSSL-Package/tree/3.6.3000>
 
 The package license is included at `ios/Vendor/Licenses/OpenSSL-Package-LICENSE`.
+
+## Mozilla CA certificate bundle
+
+`ios/ClusterLens/Resources/cacert.pem` is the Mozilla CA certificate store converted to PEM format and distributed by the curl project. It is licensed under the Mozilla Public License 2.0.
+
+Source: <https://curl.se/docs/caextract.html>

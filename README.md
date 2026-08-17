@@ -13,28 +13,39 @@ ClusterLens is a native MongoDB explorer for iPhone and iPad. It connects direct
 ## What it does
 
 - Connects with `mongodb://` and `mongodb+srv://` connection strings
+- Keeps multiple MongoDB sessions live and switches between them from one connection manager
+- Saves each connection for future launches without sending it to a ClusterLens server
 - Resolves Atlas DNS SRV and TXT records directly on iOS
 - Browses databases and collections
 - Runs `find`, `findOne`, aggregation, count, and distinct queries
 - Supports Extended JSON values such as `$oid` and `$date`
 - Supports guarded insert, update, and delete operations
 - Formats and copies results, with query timing and local history
-- Stores the connection string in the iOS Keychain
+- Stores every connection string in the non-synchronizing, this-device-only iOS Keychain
+- Keeps query history scoped to the active connection
 - Requires Face ID or the device passcode before enabling writes
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    A["ClusterLens on iPhone"] -->|"DNS SRV + TXT"| B["System DNS resolver"]
-    A -->|"MongoDB wire protocol + TLS"| C["MongoDB Atlas or self-hosted cluster"]
-    D["iOS Keychain"] -->|"connection string"| A
+    A["ClusterLens on iPhone"] --> J["Multi-session coordinator"]
+    J -->|"DNS SRV + TXT"| B["System DNS resolver"]
+    J -->|"Independent wire-protocol sessions + TLS"| C["MongoDB clusters"]
+    D["Device-only iOS Keychain"] -->|"one URI per connection"| J
     E["SwiftUI"] --> F["Small C bridge"]
     F --> G["MongoDB C Driver 2.3.3"]
     G --> H["OpenSSL 3.6.3"]
+    I["Mozilla CA trust store"] --> H
 ```
 
-There is no web gateway, proxy, or Atlas Data API in the connection path. The repository includes prebuilt iOS XCFrameworks for the MongoDB C driver and OpenSSL so the Xcode project builds without an extra native toolchain step.
+There is no web gateway, proxy, or Atlas Data API in the connection path. The repository includes prebuilt iOS XCFrameworks for the MongoDB C driver and OpenSSL so the Xcode project builds without an extra native toolchain step. TLS peers are verified against the bundled Mozilla CA store; certificate verification is never disabled.
+
+## On-device connection storage
+
+ClusterLens 0.3 keeps one independent native client per live connection. Switching the active cluster does not close the other sessions, so returning to an already-connected cluster is immediate.
+
+Each complete URI is stored under a separate random connection ID in the iOS Keychain with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` and Keychain synchronization disabled. The local profile index contains only the friendly name, hostname, SRV flag, and active ID. That index and query history use complete file protection and are excluded from device backups. ClusterLens has no account system, analytics backend, sync service, gateway, or connection-string API.
 
 ## Before connecting
 
@@ -53,7 +64,7 @@ Requirements:
 - iOS 17 or newer
 - An Apple development team for installation on a physical iPhone
 
-The generated Xcode project is included. Open `ios/ClusterLens.xcodeproj`, select your development team, choose an iPhone or Simulator, and run.
+The generated Xcode project is included. Open `ios/ClusterLens.xcodeproj`, select your development team, choose an iPhone or Simulator, and run. Tap the connection card or server icon in Browse to add, switch, reconnect, disconnect, or remove saved connections.
 
 To regenerate the project after editing `project.yml`:
 
@@ -136,7 +147,7 @@ The initial request was simple: “MongoDB Compass, but for iPhone.” AI was us
 
 The first polished MVP was assembled in roughly **20 minutes**. After testing revealed that it accepted only a gateway URL, the app was reworked for a genuine direct connection. That revision took roughly **25 additional minutes** of active engineering: researching the available MongoDB drivers, cross-compiling the native C driver for iPhone and Simulator, adapting two unavailable iOS APIs, adding on-device SRV/TXT resolution, integrating TLS, and expanding the test suite.
 
-So the current direct-connection version represents about **45 minutes of AI-assisted active build time**, based on the project build timestamps. The important part was not generating a screen quickly; it was validating the native networking path and being honest about the extra work required when the first architecture did not match the intended product.
+The multi-connection 0.3 update added independent live clients, migration, device-only persistence, connection switching, and per-cluster history in roughly **15 more minutes**. The current version therefore represents about **60 minutes of AI-assisted active engineering**, based on the project build timestamps. The important part was not generating a screen quickly; it was validating the native networking path and being honest about the extra work required when the first architecture did not match the intended product.
 
 ## Verification
 
@@ -144,7 +155,7 @@ The included project has been validated with:
 
 - an iPhone Simulator application build
 - a physical-iPhone (`iphoneos`) compilation
-- seven passing unit tests
+- eleven passing unit tests
 - verification that the app embeds and links the iOS OpenSSL framework
 
 Live cluster behavior still depends on your Atlas user, IP allowlist, DNS, and cluster configuration. Test first with a non-production cluster and a read-only account.
@@ -157,6 +168,7 @@ This is a developer MVP, not an App Store release. MongoDB does not publish an o
 
 - MongoDB C Driver 2.3.3 — Apache License 2.0
 - OpenSSL 3.6.3 XCFramework from `krzyzanowskim/OpenSSL-Package` — Apache License 2.0
+- Mozilla CA certificate bundle distributed by curl — Mozilla Public License 2.0
 - SwiftUI, LocalAuthentication, Security, and DNS-SD — Apple platform frameworks
 
 See `THIRD_PARTY_NOTICES.md` and the vendored license files for details.

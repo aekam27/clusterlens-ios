@@ -9,7 +9,9 @@ extern "C" {
 
 typedef void *CLMongoClientRef;
 
-CLMongoClientRef cl_mongo_connect(const char *uri, char **error_message);
+CLMongoClientRef cl_mongo_connect(const char *uri,
+                                  const char *ca_file,
+                                  char **error_message);
 void cl_mongo_disconnect(CLMongoClientRef client);
 
 char *cl_mongo_list_databases(CLMongoClientRef client, char **error_message);
