@@ -16,9 +16,9 @@ ClusterLens is a native MongoDB explorer for iPhone and iPad. It connects direct
 - Keeps multiple MongoDB sessions live and switches between them from one connection manager
 - Saves each connection for future launches without sending it to a ClusterLens server
 - Resolves Atlas DNS SRV and TXT records directly on iOS
-- Browses databases and collections
+- Browses databases and collections, with forward-only document pages and lazy rows
 - Runs `find`, `findOne`, aggregation, count, and distinct queries
-- Supports Extended JSON values such as `$oid` and `$date`
+- Preserves BSON types in canonical Extended JSON, including 64-bit integers, decimals, `$oid`, and `$date`
 - Supports guarded insert, update, and delete operations
 - Formats and copies results, with query timing and local history
 - Stores every connection string in the non-synchronizing, this-device-only iOS Keychain
@@ -129,7 +129,29 @@ Run an aggregation:
 }
 ```
 
-Find results are capped at 100 documents in the native bridge. This protects the mobile UI from accidentally loading an unbounded collection.
+Find and aggregation previews are capped at 100 documents in the native bridge. A document must fit within 1 MiB in both BSON and serialized JSON, and cursor output must fit within 4 MiB of JSON. Oversized previews fail with guidance to reduce the limit or use a projection. These are retained preview limits, not a guarantee about total app or server memory. Query input is limited to 256 KiB.
+
+Read commands use a 10-second server execution limit. Connection selection, connection establishment, and socket waits have separate ceilings of 12, 10, and 15 seconds. These limits do not form one total deadline or guarantee immediate cancellation. Cancel read prevents queued work and discards late results; an in-flight native call must return or time out first. Aggregations cannot use `$out` or `$merge`, and do not enable disk spill.
+
+Only the active saved profile reconnects on launch; other profiles reconnect when selected. Already live sessions remain open when switching. Both connection-string schemes require TLS and certificate/hostname verification; disabling TLS or verification is rejected.
+
+### Paged collection browsing
+
+Open a regular collection from Browse to start a read-only cursor sorted by `_id` ascending with simple collation. Tap **Next page** to advance, **Restart** to begin a new scan, or **Query** for filters/projections and other operations. Views and other collection types continue to open the query workbench.
+
+Each page holds at most 20 documents and 4 MiB of serialized document JSON. The previous page is released before loading the next one; there is no growing result array, deep `skip`, or client-side range boundary. One validated lookahead document determines whether another page exists. Rows load lazily, one document expands at a time, and the expanded display previews at most 16,384 characters. **Copy document** copies the complete canonical document only when tapped.
+
+The cursor closes on exhaustion, errors, cancellation, leaving the browser, backgrounding, or disconnect. Cancellation is cooperative: active I/O must return or time out. Failures and cursor expiry require Restart; there is no automatic query replay. This live scan is not a snapshot. Concurrent changes may produce omissions/repeats; `_id` ties across shards have server-defined tie ordering. Driver receive buffers, decoded Swift values, and temporary formatting allocations are outside the JSON byte budget. See [resource limits and validation gates](docs/production-foundation-audit.md#third-local-checkpoint--paged-collection-browsing).
+
+### Exact numeric values
+
+Native results use canonical Extended JSON, so BSON numeric types survive display, copying, and reuse:
+
+```json
+{ "_id": { "$numberLong": "9007199254740993" }, "amount": { "$numberDecimal": "1234567890.123456789012345678901234" } }
+```
+
+Plain integer input within the signed 64-bit range stays exact. For explicit doubles/decimals, or numbers outside the supported plain-number range, use `$numberDouble`/`$numberDecimal`. This also preserves numeric types that plain JSON cannot distinguish. Counts are returned as `$numberLong` values.
 
 ## Write safety
 
@@ -137,9 +159,9 @@ Write operations require all of the following:
 
 1. the MongoDB user has the required write role;
 2. writes are unlocked with Face ID or the device passcode;
-3. the individual query is confirmed in the app.
+3. the individual query is confirmed in the app against a captured operation, input, and connection.
 
-Writes relock whenever the app leaves the foreground. Use a read-only MongoDB user unless mobile writes are genuinely needed.
+Write authorization is rechecked at native dispatch. Relocking revokes queued writes; a write already accepted for dispatch may still complete. Writes relock whenever the app leaves the foreground. Update and delete require a non-empty filter; prefer a specific `_id`. Aggregation is always read-only in ClusterLens. Use a read-only MongoDB user unless mobile writes are genuinely needed.
 
 ## How the idea came to life with AI
 
@@ -151,14 +173,20 @@ The multi-connection 0.3 update added independent live clients, migration, devic
 
 ## Verification
 
-The included project has been validated with:
+Previous revisions of the included project were validated with:
 
 - an iPhone Simulator application build
 - a physical-iPhone (`iphoneos`) compilation
 - eleven passing unit tests
 - verification that the app embeds and links the iOS OpenSSL framework
 
+This foundation branch adds offline Swift checks (`scripts/test-foundation.sh`) and synthetic native bridge checks (`scripts/test-native-safety.sh`), plus a Foundation-only Swift package for XCTest-capable hosts. The current branch builds for the arm64 iOS simulator and as an unsigned Release iOS device app using Xcode 27.0. All 32 hosted XCTest tests pass on a fresh iOS 27.0 simulator. Selected synthetic iPhone/iPad browsing, filter and export workflows received manual UI QA; transport integration and physical-device validation remain open. See the [build and runtime record](docs/build-runtime-validation.md). See the [audit, validation limits, and launch gates](docs/production-foundation-audit.md).
+
 Live cluster behavior still depends on your Atlas user, IP allowlist, DNS, and cluster configuration. Test first with a non-production cluster and a read-only account.
+
+## Product direction
+
+The goal is comprehensive MongoDB workflows with Compass-level usefulness and ease of use on iPhone/iPad, plus separately authorized Atlas capabilities. The current developer MVP is a foundation, not feature parity. See the [source-verified feature matrix and phased roadmap](docs/compass-atlas-roadmap.md) for implemented, partial, planned and gated workflows.
 
 ## Important status
 
@@ -172,3 +200,7 @@ This is a developer MVP, not an App Store release. MongoDB does not publish an o
 - SwiftUI, LocalAuthentication, Security, and DNS-SD — Apple platform frameworks
 
 See `THIRD_PARTY_NOTICES.md` and the vendored license files for details.
+
+### Query, export and collection tools (foundation review branch)
+
+The collection browser now links to a typed filter builder and raw Extended JSON filters, selectable columns, bounded JSON/CSV export with a chosen row limit, and guarded collection creation/removal. See [behavior, limits, validation and QA handoff](docs/query-export-collections.md). Selected synthetic UI workflows have been verified on iPhone/iPad simulators; complete accessibility and real transport checks remain open. An authorized physical-device update was installed and launched, without real database actions.

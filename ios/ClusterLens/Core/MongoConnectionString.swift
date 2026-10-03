@@ -54,7 +54,7 @@ struct MongoConnectionString {
     }
 
     static func expanded(_ rawValue: String, resolver: DNSRecordResolving = SystemDNSResolver()) async throws -> String {
-        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let value = try requiringTLS(rawValue)
         let summary = try summary(for: value)
         guard summary.usesSRV else { return value }
 
@@ -71,6 +71,42 @@ struct MongoConnectionString {
         let txtData = (try? await resolver.query(name: summary.host, type: UInt16(kDNSServiceType_TXT))) ?? []
         let txtOptions = try txtData.flatMap(parseTXTRecord)
         return try expand(value, records: srvRecords, txtOptions: txtOptions)
+    }
+
+    // Validate before DNS/network work; never include option values or credentials in errors.
+    static func requiringTLS(_ rawValue: String) throws -> String {
+        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = try summary(for: value)
+        guard !value.contains("#") else {
+            throw MongoConnectionError.invalid("MongoDB connection strings cannot contain a URL fragment.")
+        }
+        let query = value.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
+        let options = query.count == 2 ? query[1].split(separator: "&") : []
+        let unsafeKeys: Set<String> = [
+            "tlsinsecure", "tlsallowinvalidcertificates", "tlsallowinvalidhostnames",
+            "sslallowinvalidcertificates", "sslallowinvalidhostnames",
+            "tlsdisablecertificaterevocationcheck", "tlsdisableocspendpointcheck"
+        ]
+        var hasTLS = false
+        for option in options {
+            let pair = option.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+            let key = (String(pair[0]).removingPercentEncoding ?? String(pair[0])).lowercased()
+            let setting = pair.count == 2 ? (String(pair[1]).removingPercentEncoding ?? String(pair[1])).lowercased() : ""
+            if key == "tls" || key == "ssl" {
+                guard setting == "true" else {
+                    throw MongoConnectionError.invalid("ClusterLens requires TLS. Remove disabled TLS options and use a TLS-enabled server.")
+                }
+                hasTLS = true
+            }
+            if unsafeKeys.contains(key) && setting != "false" {
+                throw MongoConnectionError.invalid("ClusterLens requires certificate and hostname verification. Remove insecure TLS options.")
+            }
+        }
+        if hasTLS { return value }
+        if query.count == 2 { return value + (query[1].isEmpty ? "" : "&") + "tls=true" }
+        let authorityEnd = value.range(of: "://")!.upperBound
+        let needsSlash = !value[authorityEnd...].contains("/")
+        return value + (needsSlash ? "/" : "") + "?tls=true"
     }
 
     static func parseSRVRecord(_ data: Data) throws -> MongoSRVRecord {

@@ -12,16 +12,19 @@ ClusterLens connects an iPhone directly to MongoDB. That is convenient, but it p
 
 ## Network protections
 
-- Atlas connections use TLS by default, including connection strings expanded from `mongodb+srv://`.
+- Both connection-string schemes require TLS; explicit plaintext and certificate/hostname verification bypass options are rejected before connecting.
 - SRV targets are accepted only when they remain inside the seed hostname's trusted parent domain.
 - Atlas Network Access remains the network boundary. Allow only the IP ranges genuinely needed.
 - Do not disable TLS or certificate validation in production.
 
 ## Query protections
 
-- Find and aggregation output is capped before it reaches SwiftUI.
+- Regular collection browsing uses a read-only native cursor, keeps only one page of up to 20 documents, and closes on exit/background/cancellation/error. It never automatically replays a failed page request.
+- Query-workbench find and aggregation output is capped at 100 documents. Individual BSON/JSON documents are capped at 1 MiB and retained cursor JSON at 4 MiB; these are not total process-memory limits.
+- Aggregation rejects `$out` and `$merge` even when writes are unlocked. Update/delete require non-empty object filters.
+- Read commands have server execution limits and connections have bounded network waits; read cancellation discards pending/late work but does not interrupt an active driver call.
 - Write operations are hidden until device-owner authentication succeeds.
-- Every write requires a separate confirmation.
+- Every write requires a separate confirmation bound to a captured query and connection. A one-shot permit is checked at native dispatch; relocking revokes permits not yet accepted for dispatch. It cannot undo a write already dispatched.
 - Write access relocks when the app leaves the foreground or switches connections.
 - MongoDB roles remain the final authorization boundary; biometrics do not add server-side permission.
 
@@ -37,3 +40,5 @@ ClusterLens connects an iPhone directly to MongoDB. That is convenient, but it p
 ## Reporting a vulnerability
 
 Do not include connection strings, credentials, customer data, or live cluster hostnames in a public issue. Share a minimal reproduction with all sensitive values replaced.
+
+See [production launch gates and verification limits](docs/production-foundation-audit.md) before relying on this developer MVP for production data.

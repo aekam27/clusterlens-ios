@@ -17,3 +17,6 @@ ios/Vendor/OpenSSL.xcframework/
 *.xcresult
 setup-screen*.png
 direct-setup*.png
+
+.build/
+.swiftpm/
