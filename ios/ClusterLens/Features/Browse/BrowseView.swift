@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct BrowseView: View {
     @EnvironmentObject private var model: AppModel
@@ -154,7 +155,11 @@ private struct CollectionListView: View {
                 Section("\(collections.count) collections") {
                     ForEach(collections) { collection in
                         NavigationLink {
-                            QueryWorkbenchView(database: database, collection: collection.name)
+                            if collection.type == "collection" {
+                                CollectionBrowserView(database: database, collection: collection.name)
+                            } else {
+                                QueryWorkbenchView(database: database, collection: collection.name)
+                            }
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: collection.type == "view" ? "rectangle.stack" : "tablecells")
@@ -175,6 +180,9 @@ private struct CollectionListView: View {
         }
         .navigationTitle(database)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            NavigationLink("Manage") { CollectionActionsView(database: database, collections: collections) }
+        }
         .task { await load() }
         .refreshable { await load() }
     }
@@ -187,6 +195,198 @@ private struct CollectionListView: View {
             collections = try await model.fetchCollections(database: database)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+
+// List creates document rows on demand. A page replaces the previous page; we
+// never append an entire collection to SwiftUI state.
+private struct CollectionBrowserView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
+    let database: String
+    let collection: String
+    @State private var session: CollectionBrowseSession?
+    @State private var window = CollectionPageWindow()
+    @State private var pageTask: Task<Void, Never>?
+    @State private var isLoading = false
+    @State private var didStart = false
+    @State private var expandedRow: Int?
+    @State private var message: String?
+
+    var body: some View {
+        List {
+            Section {
+                Text("Forward scan · _id ascending")
+                    .font(.subheadline.weight(.semibold))
+                Text("Up to 20 documents per page. Only the current page is kept. Concurrent database changes can affect this live scan.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack {
+                    Button("Restart") { restart() }
+                        .disabled(isLoading)
+                    Spacer()
+                    if isLoading {
+                        ProgressView()
+                        Button("Cancel") { stop(message: "Read cancelled. Restart to browse again.") }
+                    } else if window.page?.hasMore == true, let session {
+                        Button("Next page") { load(session, start: false) }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+                if isLoading {
+                    Text("An active network call must finish or time out before another page can load.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let message {
+                    Text(message).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+
+            if let page = window.page {
+                Section("Page \(window.pageNumber) · \(page.documents.count) \(page.documents.count == 1 ? "document" : "documents") · \(window.documentsSeen) seen") {
+                    ForEach(Array(page.documents.enumerated()), id: \.offset) { index, document in
+                        BrowseDocumentRow(document: document, ordinal: window.documentsSeen - page.documents.count + index + 1,
+                                          isExpanded: expandedRow == index) {
+                            expandedRow = expandedRow == index ? nil : index
+                        }
+                        .id("\(window.pageNumber)-\(index)")
+                    }
+                    if page.documents.isEmpty { Text("No documents found.").foregroundStyle(.secondary) }
+                    if !page.hasMore && !page.documents.isEmpty {
+                        Text("End of this cursor.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle(collection)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            NavigationLink("Filter & export") { FindWorkspaceView(database: database, collection: collection) }
+                .disabled(isLoading)
+            NavigationLink("Query") { QueryWorkbenchView(database: database, collection: collection) }
+                .disabled(isLoading)
+        }
+        .task {
+            if !didStart {
+                didStart = true
+                restart()
+            }
+        }
+        .onDisappear { stop(message: "Browsing paused. Restart to open a new cursor.") }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { stop(message: "Browsing paused. Restart to open a new cursor.") }
+        }
+    }
+
+    private func restart() {
+        guard !isLoading else { return }
+        stop(message: nil)
+        do {
+            let newSession = try model.prepareBrowsing(database: database, collection: collection)
+            session = newSession
+            window.begin(newSession.id)
+            load(newSession, start: true)
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+
+    private func load(_ request: CollectionBrowseSession, start: Bool) {
+        guard !isLoading else { return }
+        isLoading = true
+        message = nil
+        expandedRow = nil
+        window.releasePage()
+        pageTask = Task {
+            defer {
+                isLoading = false
+                pageTask = nil
+            }
+            do {
+                let page = try await model.loadBrowsePage(request, start: start)
+                try Task.checkCancellation()
+                guard session?.id == request.id else {
+                    await model.closeBrowsing(request)
+                    return
+                }
+                try window.accept(page, sessionID: request.id)
+            } catch {
+                await model.closeBrowsing(request)
+                if session?.id == request.id {
+                    session = nil
+                    window.close()
+                    message = error is CancellationError
+                        ? "Read cancelled. Restart to browse again."
+                        : "\(error.localizedDescription) Restart browsing or use Query with a filter/projection."
+                }
+            }
+        }
+    }
+
+    private func stop(message: String?) {
+        pageTask?.cancel()
+        if let session { Task { await model.closeBrowsing(session) } }
+        session = nil
+        window.close()
+        expandedRow = nil
+        self.message = message
+    }
+}
+
+private struct BrowseDocumentRow: View {
+    let document: JSONValue
+    let ordinal: Int
+    let isExpanded: Bool
+    let toggle: () -> Void
+    @State private var preview = ""
+    @State private var isTruncated = false
+
+    private var identifier: String {
+        guard case .object(let fields) = document, let value = fields["_id"] else { return "No _id field" }
+        return value.browseLabel
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: toggle) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Document \(ordinal)").font(.caption).foregroundStyle(.secondary)
+                        Text(identifier).font(.system(.subheadline, design: .monospaced)).lineLimit(2)
+                    }
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if isExpanded {
+                ScrollView(.horizontal) {
+                    Text(preview)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                }
+                .frame(maxHeight: 320)
+                if isTruncated {
+                    Text("Showing the first 16,384 characters. Copy includes the complete document.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Button("Copy document") { UIPasteboard.general.string = document.prettyPrinted }
+                    .font(.caption)
+            }
+        }
+        .onChange(of: isExpanded, initial: true) { _, expanded in
+            if expanded {
+                let formatted = document.prettyPrinted
+                preview = String(formatted.prefix(16_384))
+                isTruncated = formatted.count > 16_384
+            } else {
+                preview = ""
+                isTruncated = false
+            }
         }
     }
 }

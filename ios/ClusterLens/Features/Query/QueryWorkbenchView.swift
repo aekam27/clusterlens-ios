@@ -12,6 +12,10 @@ struct QueryWorkbenchView: View {
     @State private var isRunning = false
     @State private var errorMessage: String?
     @State private var showWriteConfirmation = false
+    @State private var pendingWrite: QueryRequest?
+    @State private var queryTask: Task<Void, Never>?
+    @State private var runningOperation: QueryOperation?
+    @State private var cancellationRequested = false
 
     init(
         database: String,
@@ -26,7 +30,7 @@ struct QueryWorkbenchView: View {
     }
 
     private var availableOperations: [QueryOperation] {
-        QueryOperation.allCases.filter { !$0.isWrite || model.writesUnlocked }
+        QueryOperation.allCases.filter { !$0.isCollectionAction && (!$0.isWrite || model.writesUnlocked) }
     }
 
     var body: some View {
@@ -42,6 +46,12 @@ struct QueryWorkbenchView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
+                NavigationLink { FindWorkspaceView(database: database, collection: collection) } label: {
+                    Label("Build a filter, choose columns & export", systemImage: "line.3.horizontal.decrease")
+                }
+                Text("Raw operation input: JSON / Extended JSON only. MongoDB shell code is not executed.")
+                    .font(.caption).foregroundStyle(.secondary)
+
                 SectionCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -53,11 +63,13 @@ struct QueryWorkbenchView: View {
                                 }
                             }
                             .pickerStyle(.menu)
+                            .disabled(isRunning)
                         }
 
                         Divider()
 
                         TextEditor(text: $editorText)
+                            .disabled(isRunning)
                             .codeEditorStyle()
                             .scrollContentBackground(.hidden)
                             .frame(minHeight: 235)
@@ -75,15 +87,10 @@ struct QueryWorkbenchView: View {
                             Spacer()
                             Button("Format", action: formatEditor)
                                 .font(.caption.weight(.medium))
+                                .disabled(isRunning)
                         }
 
-                        Button {
-                            if operation.isWrite {
-                                showWriteConfirmation = true
-                            } else {
-                                Task { await run() }
-                            }
-                        } label: {
+                        Button(action: prepareAndRun) {
                             HStack {
                                 if isRunning { ProgressView().tint(.white) }
                                 Label(isRunning ? "Running…" : "Run \(operation.title)", systemImage: "play.fill")
@@ -94,6 +101,17 @@ struct QueryWorkbenchView: View {
                         .controlSize(.large)
                         .tint(operation.isWrite ? .orange : .accentColor)
                         .disabled(isRunning)
+
+                        if isRunning && runningOperation?.isWrite == false {
+                            Button(cancellationRequested ? "Cancellation requested…" : "Cancel read") {
+                                cancellationRequested = true
+                                queryTask?.cancel()
+                            }
+                            .disabled(cancellationRequested)
+                            Text("An in-flight network call must finish or time out before another query can run.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 
@@ -121,18 +139,39 @@ struct QueryWorkbenchView: View {
             errorMessage = nil
         }
         .confirmationDialog(
-            "Run \(operation.title)?",
+            "Run \(pendingWrite?.operation.title ?? "write")?",
             isPresented: $showWriteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Run write query", role: .destructive) { Task { await run() } }
-            Button("Cancel", role: .cancel) { }
+            if let request = pendingWrite {
+                Button("Run write query", role: .destructive) {
+                    pendingWrite = nil
+                    start(request, writeConfirmed: true)
+                }
+            }
+            Button("Cancel", role: .cancel) { pendingWrite = nil }
         } message: {
-            Text("This changes data in \(database).\(collection) and may not be reversible.")
+            if let request = pendingWrite {
+                Text("This changes data in \(request.database).\(request.collection) and may not be reversible. It runs the query captured when you tapped Run.")
+            }
+        }
+        .onChange(of: model.writesUnlocked) { _, unlocked in
+            if !unlocked {
+                pendingWrite = nil
+                showWriteConfirmation = false
+            }
+        }
+        .onDisappear {
+            pendingWrite = nil
+            if runningOperation?.isWrite == false { queryTask?.cancel() }
         }
     }
 
     private func parsedInput() throws -> [String: JSONValue] {
+        guard editorText.utf8.count <= QuerySafety.maximumInputBytes else {
+            throw QuerySafety.Violation(message: "Query input exceeds the 256 KiB mobile limit.")
+        }
+        try StrictJSON.validate(editorText)
         guard let data = editorText.data(using: .utf8) else { throw ClientError.encoding }
         return try JSONDecoder().decode([String: JSONValue].self, from: data)
     }
@@ -146,28 +185,51 @@ struct QueryWorkbenchView: View {
             editorText = String(decoding: data, as: UTF8.self)
             errorMessage = nil
         } catch {
-            errorMessage = "The editor does not contain a valid JSON object."
+            errorMessage = error.localizedDescription
         }
     }
 
-    private func run() async {
-        isRunning = true
-        errorMessage = nil
-        defer { isRunning = false }
+    private func prepareAndRun() {
         do {
-            execution = try await model.runQuery(
-                database: database,
-                collection: collection,
-                operation: operation,
-                input: parsedInput(),
-                sourceText: editorText
-            )
-        } catch let error as DecodingError {
-            errorMessage = "Invalid JSON: \(error.localizedDescription)"
+            let request = try model.prepareQuery(database: database, collection: collection,
+                                                 operation: operation, sourceText: editorText)
+            if request.operation.isWrite {
+                pendingWrite = request
+                showWriteConfirmation = true
+            } else {
+                start(request)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
+
+    private func start(_ request: QueryRequest, writeConfirmed: Bool = false) {
+        guard !isRunning else { return }
+        isRunning = true
+        runningOperation = request.operation
+        cancellationRequested = false
+        execution = nil
+        errorMessage = nil
+        queryTask = Task { await run(request, writeConfirmed: writeConfirmed) }
+    }
+
+    private func run(_ request: QueryRequest, writeConfirmed: Bool) async {
+        defer {
+            isRunning = false
+            runningOperation = nil
+            queryTask = nil
+        }
+        do {
+            let result = try await model.runQuery(request, writeConfirmed: writeConfirmed)
+            if model.activeProfileID == request.connectionID { execution = result }
+        } catch is CancellationError {
+            errorMessage = request.operation.isWrite ? "Write cancelled before dispatch." : "Read cancelled."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
 }
 
 private struct QueryResultView: View {
@@ -193,6 +255,12 @@ private struct QueryResultView: View {
                     }
                     .buttonStyle(.bordered)
                     .accessibilityLabel("Copy result")
+                }
+
+                if execution.operation == "find" || execution.operation == "aggregate" {
+                    Text("Bounded preview: up to 100 documents. This may not include every match. Use a filter or projection to narrow results.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 ScrollView(.horizontal) {

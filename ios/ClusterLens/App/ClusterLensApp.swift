@@ -23,13 +23,21 @@ private struct RootView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        Group {
-            if model.isBootstrapping {
-                LaunchView()
-            } else if model.profiles.isEmpty {
-                SetupView()
-            } else {
-                MainTabView()
+        VStack(spacing: 0) {
+            if model.isSyntheticUI {
+                Text("SYNTHETIC QA · No database · Writes disabled")
+                    .font(.caption.weight(.semibold))
+                    .frame(maxWidth: .infinity).padding(6)
+                    .background(.yellow.opacity(0.2))
+            }
+            Group {
+                if model.isBootstrapping {
+                    LaunchView()
+                } else if model.profiles.isEmpty {
+                    SetupView()
+                } else {
+                    MainTabView()
+                }
             }
         }
         .animation(.easeInOut(duration: 0.2), value: model.activeProfileID)
