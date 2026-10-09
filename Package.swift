@@ -10,7 +10,7 @@ let package = Package(
             name: "ClusterLensCore",
             path: "ios/ClusterLens/Core",
             exclude: ["AppModel.swift", "MongoDirectClient.swift", "MongoBridge.c", "MongoBridge.h", "KeychainService.swift", "Theme.swift"],
-            sources: ["JSONValue.swift", "Models.swift", "MongoConnectionString.swift", "FindQuery.swift", "DataExport.swift"]
+            sources: ["JSONValue.swift", "Models.swift", "MongoConnectionString.swift", "FindQuery.swift", "DataExport.swift", "FindPresetStore.swift"]
         ),
         .testTarget(name: "ClusterLensCoreTests", dependencies: ["ClusterLensCore"], path: "ios/ClusterLensTests")
     ]

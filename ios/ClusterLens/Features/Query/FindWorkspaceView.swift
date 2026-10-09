@@ -24,6 +24,9 @@ struct FindWorkspaceView: View {
     @State private var pendingExport: DataExportRequest?
     @State private var exportResult: DataExportResult?
     @State private var showResetBuilder = false
+    @State private var showsSavedQueries = false
+    @State private var presetName = ""
+    @State private var pendingPreset: (query: FindQuery, context: FindPresetContext)?
 
     var body: some View {
         Form {
@@ -37,6 +40,22 @@ struct FindWorkspaceView: View {
                         catch { message = error.localizedDescription }
                     }
                 }.disabled(busy)
+            }
+            Section("Saved queries") {
+                Button("Save current query…") { preparePreset() }
+                    .disabled(busy || model.presetStorageError != nil)
+                    .accessibilityHint("Names and saves the current filter, selected columns and sort on this device")
+                if let context = presetContext {
+                    Button("Saved queries (\(model.findPresets(in: context).count))") { showsSavedQueries = true }
+                        .disabled(busy)
+                        .accessibilityHint("Load, rename or delete queries saved for this connection and collection")
+                }
+                Text("Save settings for repeat work. Loading only fills the editor; Apply filter and preview runs it. Filter values are stored locally—do not include secrets. No connection URI or result rows are copied.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let error = model.presetStorageError {
+                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Button("Retry saved-query storage") { model.reloadFindPresets() }.disabled(busy)
+                }
             }
             Section(rawMode ? "Raw MongoDB filter" : "Visual filter") {
                 if rawMode {
@@ -134,6 +153,19 @@ struct FindWorkspaceView: View {
         }
         .navigationTitle("Filter & export").navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
+        .sheet(isPresented: $showsSavedQueries) {
+            if let context = presetContext {
+                SavedFindPresetsView(context: context) { preset in loadPreset(preset, in: context) }
+                    .environmentObject(model)
+            }
+        }
+        .alert("Save query settings", isPresented: Binding(get: { pendingPreset != nil }, set: { if !$0 { pendingPreset = nil } })) {
+            TextField("Query name", text: $presetName)
+            Button("Cancel", role: .cancel) { pendingPreset = nil }
+            if let pendingPreset {
+                Button("Save") { savePreset(query: pendingPreset.query, context: pendingPreset.context) }
+            }
+        } message: { Text("Give this filter, column selection and _id sort a name. It is available only in this connection and collection; saving does not run it.") }
         .alert("Start a new visual filter?", isPresented: $showResetBuilder) {
             Button("Keep raw filter", role: .cancel) {}
             Button("Start new filter", role: .destructive) { rules = []; any = false; rawMode = false; rawFilter = "{}"; message = nil }
@@ -150,6 +182,35 @@ struct FindWorkspaceView: View {
         }
         .onDisappear { stop(); discardExport() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { stop() } }
+    }
+
+    private var presetContext: FindPresetContext? {
+        model.activeProfileID.map { FindPresetContext(connectionID: $0, database: database, collection: collection) }
+    }
+
+    private func preparePreset() {
+        guard !busy, let context = presetContext else { return }
+        do { pendingPreset = (try query(), context); presetName = "" }
+        catch { message = error.localizedDescription }
+    }
+
+    private func savePreset(query: FindQuery, context: FindPresetContext) {
+        pendingPreset = nil
+        do {
+            try model.saveFindPreset(name: presetName, query: query, in: context)
+            message = "Saved query settings on this device. No query was run."
+        } catch { message = error.localizedDescription }
+    }
+
+    private func loadPreset(_ preset: SavedFindPreset, in context: FindPresetContext) {
+        guard !busy else { return }
+        do {
+            let saved = try model.loadFindPreset(id: preset.id, in: context)
+            rawFilter = JSONValue.object(saved.filter).prettyPrinted
+            rawMode = true; rules = []; any = false
+            fields = saved.fields.joined(separator: ", "); descending = saved.descending
+            message = "Loaded \(preset.name). Select Apply filter and preview to run it. Any existing preview still uses its previous settings."
+        } catch { message = error.localizedDescription }
     }
 
     private var suggestedFields: [String]? {

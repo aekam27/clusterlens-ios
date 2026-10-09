@@ -91,3 +91,19 @@ Validation performed on the patch:
 - Logs and result bundles are kept under ignored `.native-build/`: `preview-regressions.log`, `preview-regressions.xcresult`, `preview-foundation.log`, `preview-numeric-roundtrip.log`, `preview-pagination.log`, and `preview-release.log`.
 
 The negative control verifies the old operation ordering with the synthetic coordinator, not a manual recreation in the old UI or a real MongoDB transport test. The new UI integration compiled, but manual interaction/accessibility testing of this follow-up has not been performed. No performance conclusions are drawn from these runs. No live database, physical-device installation, credentials, remote push, merge or publication was involved in this follow-up.
+
+## Saved-query follow-up — 2026-10-09
+
+The local `codex/saved-query-presets` branch includes the preview-preservation fix and adds named find settings scoped to connection UUID, database and collection. See the [saved-query contract](saved-queries.md) for storage, recovery and lifecycle behavior. Loading only fills the editor; it does not dispatch a read or export.
+
+Validation performed on the final implementation:
+
+- **49 hosted XCTest tests passed** on the isolated iPhone simulator, including 11 preset tests. Coverage includes exact canonical numeric/filter/column/sort persistence, first-run initialization without writing, durable rename/delete, duplicate names, cross-context rejection, corrupt/future/oversized storage preservation, bounded preset count, write failure, scoped connection cleanup, and corrupt-storage cleanup failure without blocking synthetic profile removal. Synthetic loading left history empty, writes locked and an existing cursor able to fetch fixture order 21 on page two.
+- **40 offline Swift package tests passed**, including the eight Foundation-only preset cases. Standalone Foundation checks passed with the updated strict JSON validator. The native bridge was unchanged from the preceding validated follow-up.
+- **Unsigned Release iOS build passed**. The existing DNS callback Sendable warning remains. No physical-device installation was performed.
+- Hosted SwiftUI attachment review covered the saved-query list and editor on iPhone and iPad at default and largest accessibility text sizes. At large text, programmatic scrolling exposed the saved-query controls; the iPhone list changed the three actions to a vertical arrangement without truncating their labels. The iPad preset suite passed nine tests before the final connection-cleanup additions; those additions were subsequently covered by the final iPhone/core runs. Layout code was unchanged between those runs.
+- These are rendered-layout checks and model tests, **not manual taps, alert/sheet lifecycle verification, or VoiceOver speech/focus tests**. No interactive UI tool was available during this follow-up. Interactive save/load/rename/delete, physical file protection while locked, and real-server behavior remain release gates. Simulator file attributes do not report iOS complete protection; the physical-device assertion remains conditionally enabled for an authorized device test.
+
+Final local evidence is retained under ignored `.native-build/`: `presets-final.log`, `presets-final.xcresult`, `presets-package-final.log`, `presets-release-final.log`, `presets-foundation.log`, `presets-ipad.xcresult`, and the exported `preset-final-layouts/` / `preset-ipad-layouts/` attachments. Earlier failed runs caught and corrected missing-file error classification; a simulator-only file-protection assertion was narrowed to physical iOS devices because the simulator does not expose that attribute.
+
+No real database, user credentials, user Keychain read, production query or destructive database operation was used. No capacity/throughput conclusion is drawn. This branch is prepared for the owner's manual GitHub Desktop push; no remote push, new PR or merge was performed for this follow-up.
