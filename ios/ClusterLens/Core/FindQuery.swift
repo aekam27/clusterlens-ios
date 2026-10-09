@@ -122,3 +122,68 @@ struct FindQuery: Equatable, Sendable {
 
     static func invalid(_ message: String) -> QuerySafety.Violation { .init(message: message) }
 }
+
+// Preparing a replacement may throw. Until it succeeds, the current page,
+// continuation session and in-flight delivery token remain untouched.
+struct FindPreviewState<Session> {
+    struct Read {
+        let id = UUID()
+        let session: Session
+        let startsCursor: Bool
+    }
+
+    private(set) var session: Session?
+    private(set) var page: CollectionPage?
+    private(set) var pageNumber = 0
+    private var deliveryID: UUID?
+
+    mutating func replace(preparing prepare: () throws -> Session) rethrows -> (read: Read, retired: Session?) {
+        let replacement = try prepare()
+        let retired = session
+        session = replacement
+        pageNumber = 0
+        return (begin(session: replacement, startsCursor: true), retired)
+    }
+
+    mutating func next() throws -> Read {
+        guard deliveryID == nil, let session, page?.hasMore == true else {
+            throw FindQuery.invalid("Apply the filter again to open a new preview cursor.")
+        }
+        return begin(session: session, startsCursor: false)
+    }
+
+    private mutating func begin(session: Session, startsCursor: Bool) -> Read {
+        let read = Read(session: session, startsCursor: startsCursor)
+        page = nil // Retain only one bounded page, including while loading.
+        deliveryID = read.id
+        return read
+    }
+
+    @discardableResult
+    mutating func accept(_ page: CollectionPage, for read: Read) throws -> Bool {
+        guard deliveryID == read.id else { return false }
+        try page.validate()
+        self.page = page
+        pageNumber += 1
+        deliveryID = nil // A completion may publish only once.
+        return true
+    }
+
+    @discardableResult
+    mutating func fail(_ read: Read) -> Bool {
+        guard deliveryID == read.id else { return false }
+        _ = cancel()
+        return true
+    }
+
+    // Revocation is immediate even when the native call cannot be interrupted.
+    @discardableResult
+    mutating func cancel() -> Session? {
+        let retired = session
+        deliveryID = nil
+        session = nil
+        page = nil
+        pageNumber = 0
+        return retired
+    }
+}

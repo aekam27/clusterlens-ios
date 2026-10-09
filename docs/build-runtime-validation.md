@@ -75,3 +75,19 @@ Native fixture scripts use existing local driver source and do not download depe
 - Verify dependency provenance/reproducibility/update ownership, CA freshness, deployment-target compatibility, privacy and distribution requirements.
 
 Synthetic write protection intentionally prevented create/drop dispatch and biometric unlocking tests. No real database connection, production query or collection mutation was performed. This review branch is not a production release or a claim of Compass/Atlas parity.
+
+## Preview preservation follow-up — 2026-10-09
+
+PR #2 is merged; this follow-up starts from main commit `4988600f9bd7eeacc051071c0278ec5561b104b8` on the local review branch `codex/preserve-query-preview`.
+
+Applying invalid replacement input previously scheduled closure of the current cursor before query validation. The patch validates and prepares the replacement first, preserving the existing page and continuation on validation failure. Per-read delivery tokens prevent cancelled/superseded completions from publishing a page or retiring a newer session; operation guards also prevent late task cleanup/progress from changing a newer operation's UI state. Explicitly resetting the filter clears obsolete feedback. The previous page is still released when a valid new read begins, keeping the one-page retention bound. Cancellation does not interrupt an active native driver call, and the UI stays busy until that call returns or times out.
+
+Validation performed on the patch:
+
+- **38 hosted XCTest tests passed** on the isolated iOS simulator, including six new preview tests. A synthetic negative control replayed the former close-before-validation order and observed a closed continuation cursor. The corresponding fixed-path test rejected invalid input, retained the session, and then loaded the second 20-document page beginning at fixture order 21. Additional tests cover failed preparation during an in-flight read, superseded success/error delivery, duplicate completion, cancellation, and restart.
+- **10 native bridge safety groups passed** with ASan/UBSan on the current bridge/test sources. Existing locally built driver libraries were reused; those libraries were not sanitizer-instrumented.
+- Standalone Foundation checks, BSON → Swift → BSON numeric round-trip, and native-page → Swift pagination checks passed.
+- Debug simulator compilation/linking and the **unsigned Release iOS device build passed**. The existing DNS callback Sendable warning remains.
+- Logs and result bundles are kept under ignored `.native-build/`: `preview-regressions.log`, `preview-regressions.xcresult`, `preview-foundation.log`, `preview-numeric-roundtrip.log`, `preview-pagination.log`, and `preview-release.log`.
+
+The negative control verifies the old operation ordering with the synthetic coordinator, not a manual recreation in the old UI or a real MongoDB transport test. The new UI integration compiled, but manual interaction/accessibility testing of this follow-up has not been performed. No performance conclusions are drawn from these runs. No live database, physical-device installation, credentials, remote push, merge or publication was involved in this follow-up.
