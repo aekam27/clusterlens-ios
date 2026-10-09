@@ -14,9 +14,8 @@ struct FindWorkspaceView: View {
     @State private var format: DataExportFormat = .json
     @State private var rowLimit = "1000"
     @State private var message: String?
-    @State private var session: CollectionBrowseSession?
-    @State private var page: CollectionPage?
-    @State private var pageNumber = 0
+    @State private var previewState = FindPreviewState<CollectionBrowseSession>()
+    @State private var operationID: UUID?
     @State private var task: Task<Void, Never>?
     @State private var busy = false
     @State private var exporting = false
@@ -25,6 +24,9 @@ struct FindWorkspaceView: View {
     @State private var pendingExport: DataExportRequest?
     @State private var exportResult: DataExportResult?
     @State private var showResetBuilder = false
+    @State private var showsSavedQueries = false
+    @State private var presetName = ""
+    @State private var pendingPreset: (query: FindQuery, context: FindPresetContext)?
 
     var body: some View {
         Form {
@@ -37,6 +39,22 @@ struct FindWorkspaceView: View {
                         do { rawFilter = try FindQuery.build(rules: rules, any: any); rawMode = true }
                         catch { message = error.localizedDescription }
                     }
+                }.disabled(busy)
+            }
+            Section("Saved queries") {
+                Button("Save current query…") { preparePreset() }
+                    .disabled(busy || model.presetStorageError != nil)
+                    .accessibilityHint("Names and saves the current filter, selected columns and sort on this device")
+                if let context = presetContext {
+                    Button("Saved queries (\(model.findPresets(in: context).count))") { showsSavedQueries = true }
+                        .disabled(busy)
+                        .accessibilityHint("Load, rename or delete queries saved for this connection and collection")
+                }
+                Text("Save settings for repeat work. Loading only fills the editor; Apply filter and preview runs it. Filter values are stored locally—do not include secrets. No connection URI or result rows are copied.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let error = model.presetStorageError {
+                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Button("Retry saved-query storage") { model.reloadFindPresets() }.disabled(busy)
                 }
             }
             Section(rawMode ? "Raw MongoDB filter" : "Visual filter") {
@@ -96,8 +114,8 @@ struct FindWorkspaceView: View {
             }.disabled(busy)
             Section("Preview") {
                 Button("Apply filter and preview") { preview(start: true) }.disabled(busy)
-                if let page {
-                    Text("Page \(pageNumber) · \(page.documents.count) documents")
+                if let page = previewState.page {
+                    Text("Page \(previewState.pageNumber) · \(page.documents.count) documents")
                     ForEach(Array(page.documents.enumerated()), id: \.offset) { _, document in
                         DisclosureGroup(document.browseLabelForDocument) {
                             Text(String(document.prettyPrinted.prefix(16_384))).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
@@ -127,7 +145,7 @@ struct FindWorkspaceView: View {
             if busy {
                 Section {
                     ProgressView(exporting ? "Exporting…" : "Reading…")
-                    Button("Cancel read") { task?.cancel() }
+                    Button("Cancel read") { stop() }
                     Text("An active network call may finish or time out before cancellation completes. Partial exports are discarded.").font(.caption)
                 }
             }
@@ -135,9 +153,22 @@ struct FindWorkspaceView: View {
         }
         .navigationTitle("Filter & export").navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
+        .sheet(isPresented: $showsSavedQueries) {
+            if let context = presetContext {
+                SavedFindPresetsView(context: context) { preset in loadPreset(preset, in: context) }
+                    .environmentObject(model)
+            }
+        }
+        .alert("Save query settings", isPresented: Binding(get: { pendingPreset != nil }, set: { if !$0 { pendingPreset = nil } })) {
+            TextField("Query name", text: $presetName)
+            Button("Cancel", role: .cancel) { pendingPreset = nil }
+            if let pendingPreset {
+                Button("Save") { savePreset(query: pendingPreset.query, context: pendingPreset.context) }
+            }
+        } message: { Text("Give this filter, column selection and _id sort a name. It is available only in this connection and collection; saving does not run it.") }
         .alert("Start a new visual filter?", isPresented: $showResetBuilder) {
             Button("Keep raw filter", role: .cancel) {}
-            Button("Start new filter", role: .destructive) { rules = []; any = false; rawMode = false; rawFilter = "{}" }
+            Button("Start new filter", role: .destructive) { rules = []; any = false; rawMode = false; rawFilter = "{}"; message = nil }
         } message: { Text("The raw filter cannot be safely imported into this limited builder. This replaces it with an empty filter.") }
         .confirmationDialog("Export matching documents?", isPresented: Binding(get: { pendingExport != nil }, set: { if !$0 { pendingExport = nil } }), titleVisibility: .visible) {
             if let request = pendingExport {
@@ -153,8 +184,37 @@ struct FindWorkspaceView: View {
         .onChange(of: scenePhase) { _, phase in if phase != .active { stop() } }
     }
 
+    private var presetContext: FindPresetContext? {
+        model.activeProfileID.map { FindPresetContext(connectionID: $0, database: database, collection: collection) }
+    }
+
+    private func preparePreset() {
+        guard !busy, let context = presetContext else { return }
+        do { pendingPreset = (try query(), context); presetName = "" }
+        catch { message = error.localizedDescription }
+    }
+
+    private func savePreset(query: FindQuery, context: FindPresetContext) {
+        pendingPreset = nil
+        do {
+            try model.saveFindPreset(name: presetName, query: query, in: context)
+            message = "Saved query settings on this device. No query was run."
+        } catch { message = error.localizedDescription }
+    }
+
+    private func loadPreset(_ preset: SavedFindPreset, in context: FindPresetContext) {
+        guard !busy else { return }
+        do {
+            let saved = try model.loadFindPreset(id: preset.id, in: context)
+            rawFilter = JSONValue.object(saved.filter).prettyPrinted
+            rawMode = true; rules = []; any = false
+            fields = saved.fields.joined(separator: ", "); descending = saved.descending
+            message = "Loaded \(preset.name). Select Apply filter and preview to run it. Any existing preview still uses its previous settings."
+        } catch { message = error.localizedDescription }
+    }
+
     private var suggestedFields: [String]? {
-        page.map { Array(Set($0.documents.flatMap { if case .object(let fields) = $0 { return Array(fields.keys) }; return [] })).sorted() }
+        previewState.page.map { Array(Set($0.documents.flatMap { if case .object(let fields) = $0 { return Array(fields.keys) }; return [] })).sorted() }
     }
     private func toggleField(_ field: String) {
         var selected = fields.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -165,17 +225,36 @@ struct FindWorkspaceView: View {
         try FindQuery(rawFilter: rawMode ? rawFilter : FindQuery.build(rules: rules, any: any), fields: fields, descending: descending)
     }
     private func preview(start: Bool) {
+        guard !busy else { return }
         do {
+            let read: FindPreviewState<CollectionBrowseSession>.Read
             if start {
-                if let session { Task { await model.closeBrowsing(session) } }
-                session = try model.prepareBrowsing(database: database, collection: collection, query: query()); pageNumber = 0
+                // All throwing preparation precedes retiring the working cursor.
+                let prepared = try model.prepareBrowsing(database: database, collection: collection, query: query())
+                let replacement = previewState.replace { prepared }
+                read = replacement.read
+                if let retired = replacement.retired { Task { await model.closeBrowsing(retired) } }
+            } else {
+                read = try previewState.next()
             }
-            guard let session else { throw ClientError.notConnected }
-            page = nil; message = nil; busy = true
+            message = nil; busy = true; operationID = read.id
             task = Task {
-                defer { busy = false; task = nil }
-                do { page = try await model.loadBrowsePage(session, start: start); try Task.checkCancellation(); pageNumber += 1 }
-                catch { page = nil; message = error is CancellationError ? "Read cancelled. Apply the filter again to restart." : error.localizedDescription; await model.closeBrowsing(session); self.session = nil }
+                defer {
+                    // A retired task must not clear a newer task's busy state.
+                    if operationID == read.id { busy = false; task = nil; operationID = nil }
+                }
+                do {
+                    let page = try await model.loadBrowsePage(read.session, start: read.startsCursor)
+                    try Task.checkCancellation()
+                    if !(try previewState.accept(page, for: read)) { await model.closeBrowsing(read.session) }
+                } catch {
+                    // Change state before awaiting cleanup; late cleanup cannot
+                    // erase a replacement session or its validation feedback.
+                    if previewState.fail(read) {
+                        message = error is CancellationError ? "Read cancelled. Apply the filter again to restart." : error.localizedDescription
+                    }
+                    await model.closeBrowsing(read.session)
+                }
             }
         } catch { message = error.localizedDescription }
     }
@@ -186,21 +265,39 @@ struct FindWorkspaceView: View {
         } catch { message = error.localizedDescription }
     }
     private func export(_ request: DataExportRequest) {
-        discardExport(); page = nil; message = nil; busy = true; exporting = true; progressRows = 0; progressBytes = 0
-        if let session { Task { await model.closeBrowsing(session) } }; session = nil
+        guard !busy else { return }
+        let id = UUID()
+        operationID = id
+        discardExport(); message = nil; busy = true; exporting = true; progressRows = 0; progressBytes = 0
+        if let retired = previewState.cancel() { Task { await model.closeBrowsing(retired) } }
         task = Task {
-            defer { busy = false; exporting = false; task = nil }
+            defer {
+                if operationID == id { busy = false; exporting = false; task = nil; operationID = nil }
+            }
             do {
-                exportResult = try await model.exportData(request) { rows, bytes in
-                    Task { @MainActor in progressRows = rows; progressBytes = bytes }
+                let result = try await model.exportData(request) { rows, bytes in
+                    Task { @MainActor in
+                        guard operationID == id, task?.isCancelled == false else { return }
+                        progressRows = rows; progressBytes = bytes
+                    }
                 }
-            } catch { message = error is CancellationError ? "Export cancelled. The partial file was discarded." : error.localizedDescription }
+                guard operationID == id, !Task.isCancelled else {
+                    try? FileManager.default.removeItem(at: result.url)
+                    return
+                }
+                exportResult = result
+            } catch {
+                if operationID == id { message = error is CancellationError ? "Export cancelled. The partial file was discarded." : error.localizedDescription }
+            }
         }
     }
     private func stop() {
         task?.cancel()
-        if let session { Task { await model.closeBrowsing(session) } }
-        session = nil
+        if let retired = previewState.cancel() {
+            Task { await model.closeBrowsing(retired) }
+            message = busy ? "Read cancelled. Apply the filter again to restart." : "Preview paused. Apply the filter again to restart."
+        }
+        // Keep busy until the current native call returns or times out.
     }
     private func discardExport() { if let result = exportResult { try? FileManager.default.removeItem(at: result.url) }; exportResult = nil }
 }

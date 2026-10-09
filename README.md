@@ -23,6 +23,7 @@ ClusterLens is a native MongoDB explorer for iPhone and iPad. It connects direct
 - Formats and copies results, with query timing and local history
 - Stores every connection string in the non-synchronizing, this-device-only iOS Keychain
 - Keeps query history scoped to the active connection
+- Saves named find filters, column selections and `_id` ordering for reuse in the same connection and collection; loading fills the editor without running a query ([saved-query contract](docs/saved-queries.md))
 - Requires Face ID or the device passcode before enabling writes
 
 ## Architecture

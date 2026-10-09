@@ -75,10 +75,10 @@ enum JSONValue: Codable, Equatable, Hashable, Sendable {
 // JSONDecoder stores objects in dictionaries. Reject duplicate keys before that
 // conversion so raw input cannot silently lose a condition or BSON type marker.
 enum StrictJSON {
-    static func validate(_ text: String) throws {
+    static func validate(_ text: String, maximumBytes: Int = QuerySafety.maximumInputBytes) throws {
         let bytes = Array(text.utf8)
-        guard bytes.count <= QuerySafety.maximumInputBytes else {
-            throw QuerySafety.Violation(message: "JSON input exceeds 256 KiB.")
+        guard bytes.count <= maximumBytes else {
+            throw QuerySafety.Violation(message: "JSON input exceeds \(maximumBytes / 1024) KiB.")
         }
         var scopes: [Set<String>?] = []
         var index = 0

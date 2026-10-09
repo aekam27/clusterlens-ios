@@ -130,4 +130,125 @@ final class FindExportTests: XCTestCase {
     }
     #endif
 
+    func testInvalidPreviewReplacementPreservesPageAndContinuation() throws {
+        var preview = FindPreviewState<UUID>()
+        let session = UUID()
+        let first = preview.replace { session }.read
+        let firstPage = CollectionPage(documents: [.integer(1)], hasMore: true, elapsedMS: 0)
+        XCTAssertTrue(try preview.accept(firstPage, for: first))
+
+        XCTAssertThrowsError(try preview.replace {
+            _ = try FindQuery(rawFilter: "{invalid}")
+            return UUID()
+        })
+        XCTAssertEqual(preview.session, session)
+        XCTAssertEqual(preview.page?.documents, firstPage.documents)
+        XCTAssertEqual(preview.pageNumber, 1)
+
+        let next = try preview.next()
+        XCTAssertEqual(next.session, session)
+        XCTAssertFalse(next.startsCursor)
+        XCTAssertNil(preview.page, "Loading releases the prior page to preserve the memory bound")
+        XCTAssertTrue(try preview.accept(CollectionPage(documents: [.integer(2)], hasMore: false, elapsedMS: 0), for: next))
+        XCTAssertEqual(preview.pageNumber, 2)
+        XCTAssertThrowsError(try preview.next())
+    }
+
+    func testFailedPreparationDoesNotInvalidateAnInFlightPreview() throws {
+        enum PreparationError: Error { case disconnected }
+        var preview = FindPreviewState<UUID>()
+        let first = preview.replace { UUID() }.read
+        XCTAssertThrowsError(try preview.replace { throw PreparationError.disconnected })
+        XCTAssertEqual(preview.session, first.session)
+        XCTAssertTrue(try preview.accept(CollectionPage(documents: [.integer(1)], hasMore: true, elapsedMS: 0), for: first))
+        XCTAssertEqual(preview.pageNumber, 1)
+    }
+
+    func testSupersededPreviewCannotPublishOrClearReplacement() throws {
+        var preview = FindPreviewState<UUID>()
+        let old = preview.replace { UUID() }.read
+        let replacement = preview.replace { UUID() }
+        XCTAssertEqual(replacement.retired, old.session)
+        XCTAssertNotEqual(replacement.read.session, old.session)
+        let invalidStalePage = CollectionPage(documents: Array(repeating: .null, count: 21), hasMore: true, elapsedMS: 0)
+        XCTAssertFalse(try preview.accept(invalidStalePage, for: old), "Stale replies are ignored before page validation")
+        XCTAssertFalse(preview.fail(old), "Late errors cannot retire the replacement session")
+        XCTAssertEqual(preview.session, replacement.read.session)
+        let currentPage = CollectionPage(documents: [.integer(2)], hasMore: false, elapsedMS: 0)
+        XCTAssertTrue(try preview.accept(currentPage, for: replacement.read))
+        XCTAssertFalse(try preview.accept(currentPage, for: old))
+        XCTAssertFalse(try preview.accept(currentPage, for: replacement.read), "A completion publishes once")
+        XCTAssertEqual(preview.page?.documents, [.integer(2)])
+        XCTAssertEqual(preview.pageNumber, 1)
+    }
+
+    func testCancellationRevokesDeliveryBeforeCleanupAndRestart() throws {
+        var preview = FindPreviewState<UUID>()
+        let old = preview.replace { UUID() }.read
+        XCTAssertEqual(preview.cancel(), old.session)
+        XCTAssertNil(preview.session)
+        XCTAssertNil(preview.page)
+        let page = CollectionPage(documents: [.integer(1)], hasMore: true, elapsedMS: 0)
+        XCTAssertFalse(try preview.accept(page, for: old))
+        XCTAssertFalse(preview.fail(old))
+        XCTAssertThrowsError(try preview.next())
+
+        let replacement = preview.replace { UUID() }.read
+        XCTAssertFalse(try preview.accept(page, for: old))
+        XCTAssertFalse(preview.fail(old))
+        XCTAssertTrue(try preview.accept(page, for: replacement))
+        let continuation = try preview.next()
+        _ = preview.cancel()
+        XCTAssertFalse(try preview.accept(page, for: continuation))
+        XCTAssertNil(preview.session)
+        XCTAssertEqual(preview.pageNumber, 0)
+    }
+
+    #if !SWIFT_PACKAGE && DEBUG
+    @MainActor
+    func testNegativeControlClosingBeforeValidationLosesSyntheticContinuation() async throws {
+        let model = AppModel(syntheticUI: true)
+        await model.bootstrap()
+        let session = try model.prepareBrowsing(database: "fixture_store", collection: "orders", query: FindQuery(rawFilter: "{}"))
+        let firstPage = try await model.loadBrowsePage(session, start: true)
+        XCTAssertTrue(firstPage.hasMore)
+
+        // Replay the former UI ordering, without a real database: schedule the
+        // close, reject invalid input, then let cleanup finish before Next page.
+        let cleanup = Task { await model.closeBrowsing(session) }
+        XCTAssertThrowsError(try model.prepareBrowsing(database: "fixture_store", collection: "orders", query: FindQuery(rawFilter: "{invalid}")))
+        await cleanup.value
+        do {
+            _ = try await model.loadBrowsePage(session, start: false)
+            XCTFail("The old ordering should lose its continuation cursor")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "Synthetic cursor is closed.")
+        }
+    }
+
+    @MainActor
+    func testInvalidReplacementKeepsSyntheticCursorUsable() async throws {
+        let model = AppModel(syntheticUI: true)
+        await model.bootstrap()
+        var preview = FindPreviewState<CollectionBrowseSession>()
+        let first = try preview.replace {
+            try model.prepareBrowsing(database: "fixture_store", collection: "orders", query: FindQuery(rawFilter: "{}"))
+        }.read
+        let firstPage = try await model.loadBrowsePage(first.session, start: first.startsCursor)
+        XCTAssertTrue(try preview.accept(firstPage, for: first))
+
+        XCTAssertThrowsError(try preview.replace {
+            try model.prepareBrowsing(database: "fixture_store", collection: "orders", query: FindQuery(rawFilter: "{invalid}"))
+        })
+        XCTAssertEqual(preview.session?.id, first.session.id)
+        let continuation = try preview.next()
+        let nextPage = try await model.loadBrowsePage(continuation.session, start: continuation.startsCursor)
+        XCTAssertTrue(try preview.accept(nextPage, for: continuation))
+        XCTAssertEqual(preview.pageNumber, 2)
+        XCTAssertEqual(nextPage.documents.count, 20)
+        XCTAssertEqual(try DataExportWriter.value(at: "item", in: nextPage.documents[0]), .string("Fixture order 21"))
+        await model.closeBrowsing(continuation.session)
+    }
+    #endif
+
 }

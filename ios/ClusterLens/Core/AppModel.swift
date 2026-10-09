@@ -9,6 +9,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var connectionStates: [UUID: ConnectionStatus] = [:]
     @Published private(set) var databasesByConnection: [UUID: [DatabaseInfo]] = [:]
     @Published private(set) var history: [QueryHistoryEntry] = []
+    @Published private(set) var savedFindPresets: [SavedFindPreset] = []
+    @Published private(set) var presetStorageError: String?
+    private var presetStore: FindPresetStore?
     @Published private(set) var writesUnlocked = false
     @Published private(set) var isBootstrapping = true
     @Published var globalError: String?
@@ -27,8 +30,9 @@ final class AppModel: ObservableObject {
     private(set) var isSyntheticUI = false
     #if DEBUG
     private var fixtureOffsets: [UUID: Int] = [:]
-    init(syntheticUI: Bool = ProcessInfo.processInfo.arguments.contains("--synthetic-ui")) {
+    init(syntheticUI: Bool = ProcessInfo.processInfo.arguments.contains("--synthetic-ui"), presetStore: FindPresetStore? = nil) {
         isSyntheticUI = syntheticUI
+        self.presetStore = presetStore ?? (syntheticUI ? FindPresetStore(fileURL: nil) : nil)
     }
     #endif
 
@@ -61,11 +65,13 @@ final class AppModel: ObservableObject {
             profiles = [fixture]
             activeProfileID = fixture.id
             await reconnect(fixture.id)
+            reloadFindPresets()
             isBootstrapping = false
             return
         }
         #endif
         history = loadHistory()
+        reloadFindPresets()
 
         if let stored = loadConnectionState(), !stored.profiles.isEmpty {
             profiles = stored.profiles
@@ -322,6 +328,62 @@ final class AppModel: ObservableObject {
     }
     #endif
 
+    func reloadFindPresets() {
+        do {
+            let store = try findPresetStore()
+            try store.load()
+            savedFindPresets = store.presets
+            presetStorageError = nil
+        } catch { presetStorageError = error.localizedDescription }
+    }
+
+    func findPresets(in context: FindPresetContext) -> [SavedFindPreset] {
+        guard activeProfileID == context.connectionID else { return [] }
+        return savedFindPresets.filter { $0.context == context }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    func saveFindPreset(name: String, query: FindQuery, in context: FindPresetContext) throws {
+        try requirePresetContext(context)
+        let store = try findPresetStore()
+        try store.save(name: name, query: query, in: context)
+        savedFindPresets = store.presets
+    }
+
+    func loadFindPreset(id: UUID, in context: FindPresetContext) throws -> FindQuery {
+        try requirePresetContext(context)
+        return try findPresetStore().query(id: id, in: context)
+    }
+
+    func renameFindPreset(id: UUID, in context: FindPresetContext, to name: String) throws {
+        try requirePresetContext(context)
+        let store = try findPresetStore()
+        try store.rename(id: id, in: context, to: name)
+        savedFindPresets = store.presets
+    }
+
+    func deleteFindPreset(id: UUID, in context: FindPresetContext) throws {
+        try requirePresetContext(context)
+        let store = try findPresetStore()
+        try store.delete(id: id, in: context)
+        savedFindPresets = store.presets
+    }
+
+    private func requirePresetContext(_ context: FindPresetContext) throws {
+        guard activeProfileID == context.connectionID, profiles.contains(where: { $0.id == context.connectionID }) else {
+            throw FindQuery.invalid("The active connection changed. Open saved queries from the intended connection and collection.")
+        }
+        try context.validate()
+    }
+
+    private func findPresetStore() throws -> FindPresetStore {
+        if let presetStore { return presetStore }
+        guard let directory = applicationDirectory else { throw FindQuery.invalid("Local saved-query storage is unavailable.") }
+        let store = FindPresetStore(fileURL: directory.appendingPathComponent("saved-find-presets.json"))
+        presetStore = store
+        return store
+    }
+
     func prepareQuery(database: String, collection: String, operation: QueryOperation, sourceText: String) throws -> QueryRequest {
         _ = try activeClient()
         guard let connectionID = activeProfileID else { throw ClientError.notConnected }
@@ -431,6 +493,17 @@ final class AppModel: ObservableObject {
         history.removeAll { $0.connectionID == id }
         saveHistory()
 
+        var presetCleanupError: String?
+        do {
+            let store = try findPresetStore()
+            try store.removeConnection(id)
+            savedFindPresets = store.presets
+        } catch {
+            // Credential removal has already succeeded and must not depend on
+            // preset storage. Preserve unreadable data and report incomplete cleanup.
+            presetCleanupError = "Connection removed, but its saved queries could not be deleted. The local preset file was preserved. \(error.localizedDescription)"
+        }
+
         if activeProfileID == id {
             activeProfileID = profiles.first?.id
             globalError = nil
@@ -441,6 +514,7 @@ final class AppModel: ObservableObject {
         if let activeProfileID, clients[activeProfileID] == nil {
             await reconnect(activeProfileID)
         }
+        if let presetCleanupError { globalError = presetCleanupError }
     }
 
     private func activeClient() throws -> MongoDirectClient {
