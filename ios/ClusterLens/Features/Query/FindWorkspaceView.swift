@@ -22,7 +22,7 @@ struct FindWorkspaceView: View {
     @State private var progressRows = 0
     @State private var progressBytes = 0
     @State private var pendingExport: DataExportRequest?
-    @State private var exportResult: DataExportResult?
+    @State private var exportState = DataExportState()
     @State private var showResetBuilder = false
     @State private var showsSavedQueries = false
     @State private var presetName = ""
@@ -135,11 +135,8 @@ struct FindWorkspaceView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Button("Review export…") { prepareExport() }.disabled(busy)
                 if exporting { Text("\(progressRows) rows · \(progressBytes.formatted()) bytes written").monospacedDigit() }
-                if let exportResult {
-                    Text("\(exportResult.request.database).\(exportResult.request.collection) · \(exportResult.request.query.fields.isEmpty ? "All fields" : exportResult.request.query.fields.joined(separator: ", "))").font(.caption)
-                    Text(exportResult.summary).font(.footnote)
-                    ShareLink("Save or share \(exportResult.request.format.rawValue)", item: exportResult.url)
-                    Text("This temporary file is removed when you leave this screen or start another export. Save a copy using the share sheet.").font(.caption)
+                if let exportResult = exportState.result {
+                    CompletedExportView(result: exportResult)
                 }
             }
             if busy {
@@ -266,9 +263,9 @@ struct FindWorkspaceView: View {
     }
     private func export(_ request: DataExportRequest) {
         guard !busy else { return }
-        let id = UUID()
+        let id = exportState.begin()
         operationID = id
-        discardExport(); message = nil; busy = true; exporting = true; progressRows = 0; progressBytes = 0
+        message = nil; busy = true; exporting = true; progressRows = 0; progressBytes = 0
         if let retired = previewState.cancel() { Task { await model.closeBrowsing(retired) } }
         task = Task {
             defer {
@@ -285,21 +282,35 @@ struct FindWorkspaceView: View {
                     try? FileManager.default.removeItem(at: result.url)
                     return
                 }
-                exportResult = result
+                exportState.complete(result, for: id)
             } catch {
+                exportState.cancel(id)
                 if operationID == id { message = error is CancellationError ? "Export cancelled. The partial file was discarded." : error.localizedDescription }
             }
         }
     }
     private func stop() {
         task?.cancel()
+        exportState.cancel()
         if let retired = previewState.cancel() {
             Task { await model.closeBrowsing(retired) }
             message = busy ? "Read cancelled. Apply the filter again to restart." : "Preview paused. Apply the filter again to restart."
         }
         // Keep busy until the current native call returns or times out.
     }
-    private func discardExport() { if let result = exportResult { try? FileManager.default.removeItem(at: result.url) }; exportResult = nil }
+    private func discardExport() { exportState.discard() }
+}
+
+struct CompletedExportView: View {
+    let result: DataExportResult
+
+    var body: some View {
+        Text("Last completed export").font(.headline)
+        Text("\(result.request.database).\(result.request.collection) · \(result.request.query.fields.isEmpty ? "All fields" : result.request.query.fields.joined(separator: ", "))").font(.caption)
+        Text(result.summary).font(.footnote)
+        ShareLink("Save or share \(result.request.format.rawValue)", item: result.url)
+        Text("This file stays available if another export fails or is cancelled. It is removed when a replacement finishes or you leave this screen. Save a copy using the share sheet.").font(.caption)
+    }
 }
 
 private extension JSONValue {

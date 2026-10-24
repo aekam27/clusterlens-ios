@@ -35,6 +35,44 @@ struct DataExportResult: Sendable {
     }
 }
 
+// Keep the last completed file until a current replacement finishes. A failed or
+// cancelled attempt must not consume the user's only shareable result.
+struct DataExportState {
+    private(set) var result: DataExportResult?
+    private var pendingID: UUID?
+
+    mutating func begin() -> UUID {
+        let id = UUID()
+        pendingID = id
+        return id
+    }
+
+    @discardableResult
+    mutating func complete(_ replacement: DataExportResult, for id: UUID) -> Bool {
+        guard pendingID == id else {
+            // Late output belongs to a cancelled/superseded attempt.
+            if replacement.url != result?.url { try? FileManager.default.removeItem(at: replacement.url) }
+            return false
+        }
+        if let previous = result, previous.url != replacement.url {
+            try? FileManager.default.removeItem(at: previous.url)
+        }
+        result = replacement
+        pendingID = nil
+        return true
+    }
+
+    mutating func cancel(_ id: UUID? = nil) {
+        if id == nil || pendingID == id { pendingID = nil }
+    }
+
+    mutating func discard() {
+        cancel()
+        if let result { try? FileManager.default.removeItem(at: result.url) }
+        result = nil
+    }
+}
+
 // One document is encoded at a time. The caller owns a bounded page, never all rows.
 final class DataExportWriter {
     let request: DataExportRequest

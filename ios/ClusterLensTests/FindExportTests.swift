@@ -4,6 +4,10 @@ import XCTest
 #else
 @testable import ClusterLens
 #endif
+#if !SWIFT_PACKAGE && DEBUG
+import SwiftUI
+import UIKit
+#endif
 
 final class FindExportTests: XCTestCase {
     func testTypedConditionsPreserveLargeIntegersAndRepeatedFields() throws {
@@ -84,6 +88,75 @@ final class FindExportTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
 
+    private func completedExport(_ format: DataExportFormat = .json) throws -> DataExportResult {
+        let writer = try DataExportWriter(request: request(format, fields: "name"))
+        try writer.write(.object(["name": .string("Fictional Cedar order")]))
+        return try writer.finish(hasMore: false)
+    }
+
+    func testFailedReplacementKeepsCompletedFileAndDiscardsPartialOutput() throws {
+        var state = DataExportState()
+        defer { state.discard() }
+        let original = try completedExport()
+        XCTAssertTrue(state.complete(original, for: state.begin()))
+        let originalBytes = try Data(contentsOf: original.url)
+
+        let attempt = state.begin()
+        XCTAssertEqual(state.result?.url, original.url)
+        var writer: DataExportWriter? = try DataExportWriter(request: request(.csv, fields: "name"), byteLimit: 64)
+        let partial = try XCTUnwrap(writer?.url)
+        XCTAssertThrowsError(try writer?.write(.object(["name": .string(String(repeating: "x", count: 80))])))
+        writer = nil
+        state.cancel(attempt)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: partial.path))
+        XCTAssertEqual(state.result?.url, original.url)
+        XCTAssertEqual(try Data(contentsOf: original.url), originalBytes)
+        XCTAssertEqual(state.result?.request.format, .json)
+    }
+
+    func testCancelledAndSupersededReplacementsCannotReplaceCompletedExport() throws {
+        var state = DataExportState()
+        defer { state.discard() }
+        let original = try completedExport()
+        XCTAssertTrue(state.complete(original, for: state.begin()))
+        let cancelled = state.begin()
+        state.cancel(cancelled)
+        let late = try completedExport(.csv)
+        XCTAssertFalse(state.complete(late, for: cancelled))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: late.url.path))
+        XCTAssertEqual(state.result?.url, original.url)
+
+        let superseded = state.begin()
+        let current = state.begin()
+        state.cancel(superseded)
+        let stale = try completedExport()
+        XCTAssertFalse(state.complete(stale, for: superseded))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.url.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: original.url.path))
+        let replacement = try completedExport(.csv)
+        XCTAssertTrue(state.complete(replacement, for: current))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: original.url.path))
+        XCTAssertEqual(state.result?.url, replacement.url)
+        XCTAssertEqual(state.result?.request.format, .csv)
+        XCTAssertTrue(try String(contentsOf: replacement.url).contains("Fictional Cedar order"))
+        XCTAssertFalse(state.complete(replacement, for: current))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: replacement.url.path))
+    }
+
+    func testLeavingExportScreenDiscardsCompletedFileAndRejectsLateCompletion() throws {
+        var state = DataExportState()
+        let original = try completedExport()
+        XCTAssertTrue(state.complete(original, for: state.begin()))
+        let pending = state.begin()
+        state.discard()
+        XCTAssertNil(state.result)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: original.url.path))
+        let late = try completedExport()
+        XCTAssertFalse(state.complete(late, for: pending))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: late.url.path))
+    }
+
     func testCollectionActionRequiresExactNamespaceAndRevocablePermit() throws {
         let connectionID = UUID(), authID = UUID()
         let authorization = WriteAuthorization(id: authID, connectionID: connectionID)
@@ -107,6 +180,44 @@ final class FindExportTests: XCTestCase {
     }
 
     #if !SWIFT_PACKAGE && DEBUG
+    // Real production result component hosted with fictional data. This is a
+    // layout attachment, not an end-to-end gesture or share-sheet test.
+    @MainActor
+    func testRetainedExportComponentLayout() async throws {
+        var state = DataExportState()
+        defer { state.discard() }
+        let result = try completedExport()
+        XCTAssertTrue(state.complete(result, for: state.begin()))
+        let attempt = state.begin()
+        state.cancel(attempt)
+        let retained = try XCTUnwrap(state.result)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        let controller = UIHostingController(rootView:
+            NavigationStack {
+                Form {
+                    Section("Export matching documents") {
+                        CompletedExportView(result: retained)
+                    }
+                }.navigationTitle("Filter & export").navigationBarTitleDisplayMode(.inline)
+            }
+        )
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        try await Task.sleep(nanoseconds: 400_000_000)
+        controller.view.layoutIfNeeded()
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "Retained export — real component — fictional fixture"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: retained.url.path))
+    }
+
     @MainActor
     func testSyntheticExportExceedsVisiblePageAndRejectsQueryEmulation() async throws {
         let model = AppModel(syntheticUI: true)

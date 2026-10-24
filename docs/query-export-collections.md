@@ -17,7 +17,7 @@ Limits are visible: **1–10,000 requested rows**, **50 MiB output**, and the ex
 
 JSON is an array of canonical Extended JSON documents, retaining the native driver's BSON type wrappers. CSV uses fixed selected columns, CRLF record endings, quoted cells and doubled quotes. Potential spreadsheet formula cells (including headers) receive an apostrophe prefix. Nested objects/arrays selected as a whole are serialized as JSON text; traversal through an array path is rejected rather than silently dropping values. Missing fields are blank CSV cells; null is `null`. CSV is a textual interchange format, not a lossless BSON round-trip format.
 
-Completed exports use iOS complete file protection in temporary storage. The share sheet lets the user save a copy. The app removes the temporary file when leaving the workspace or starting another export. A force-quit can leave an OS-managed temporary file until the system clears it; no app-start cleanup is claimed in this iteration.
+Completed exports use iOS complete file protection in temporary storage. The share sheet lets the user save a copy. The app removes the temporary file when leaving the workspace or when a replacement export succeeds. A failed or cancelled replacement keeps the last completed file available. One completed file and one bounded in-progress file may coexist; see [export retention](export-retention.md). A force-quit can leave an OS-managed temporary file until the system clears it; no app-start cleanup is claimed in this iteration.
 
 ## Validation and destructive-action boundaries
 
