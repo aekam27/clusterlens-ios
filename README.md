@@ -16,7 +16,7 @@ ClusterLens is a native MongoDB explorer for iPhone and iPad. It connects direct
 - Keeps multiple MongoDB sessions live and switches between them from one connection manager
 - Saves each connection for future launches without sending it to a ClusterLens server
 - Resolves Atlas DNS SRV and TXT records directly on iOS
-- Browses databases and collections, with forward-only document pages and lazy rows
+- Browses databases and collections with bounded forward-only pages, selectable display columns, compact phone cards and a tablet table
 - Runs `find`, `findOne`, aggregation, count, and distinct queries
 - Preserves BSON types in canonical Extended JSON, including 64-bit integers, decimals, `$oid`, and `$date`
 - Supports guarded insert, update, and delete operations
@@ -140,7 +140,7 @@ Only the active saved profile reconnects on launch; other profiles reconnect whe
 
 Open a regular collection from Browse to start a read-only cursor sorted by `_id` ascending with simple collation. Tap **Next page** to advance, **Restart** to begin a new scan, or **Query** for filters/projections and other operations. Views and other collection types continue to open the query workbench.
 
-Each page holds at most 20 documents and 4 MiB of serialized document JSON. The previous page is released before loading the next one; there is no growing result array, deep `skip`, or client-side range boundary. One validated lookahead document determines whether another page exists. Rows load lazily, one document expands at a time, and the expanded display previews at most 16,384 characters. **Copy document** copies the complete canonical document only when tapped.
+Each page holds at most 20 documents and 4 MiB of serialized document JSON. The previous page is released before loading the next one; there is no growing result array, deep `skip`, or client-side range boundary. One validated lookahead document determines whether another page exists. Phone records show selected fields in compact cards; regular-width iPad layouts use a horizontally scrollable table. **Columns** chooses up to eight fields without running a query. Tap a value or record to inspect nested objects and arrays. Missing fields and null values have distinct labels, and canonical BSON numeric types retain their exact text. **Copy complete Extended JSON** copies the entire selected value explicitly. See [results workspace scope and verification](docs/results-workspace.md).
 
 The cursor closes on exhaustion, errors, cancellation, leaving the browser, backgrounding, or disconnect. Cancellation is cooperative: active I/O must return or time out. Failures and cursor expiry require Restart; there is no automatic query replay. This live scan is not a snapshot. Concurrent changes may produce omissions/repeats; `_id` ties across shards have server-defined tie ordering. Driver receive buffers, decoded Swift values, and temporary formatting allocations are outside the JSON byte budget. See [resource limits and validation gates](docs/production-foundation-audit.md#third-local-checkpoint--paged-collection-browsing).
 

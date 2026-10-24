@@ -212,7 +212,8 @@ private struct CollectionBrowserView: View {
     @State private var pageTask: Task<Void, Never>?
     @State private var isLoading = false
     @State private var didStart = false
-    @State private var expandedRow: Int?
+    @State private var resultColumns: [String] = []
+    @State private var inspectedValue: InspectedValue?
     @State private var message: String?
 
     var body: some View {
@@ -247,13 +248,7 @@ private struct CollectionBrowserView: View {
 
             if let page = window.page {
                 Section("Page \(window.pageNumber) · \(page.documents.count) \(page.documents.count == 1 ? "document" : "documents") · \(window.documentsSeen) seen") {
-                    ForEach(Array(page.documents.enumerated()), id: \.offset) { index, document in
-                        BrowseDocumentRow(document: document, ordinal: window.documentsSeen - page.documents.count + index + 1,
-                                          isExpanded: expandedRow == index) {
-                            expandedRow = expandedRow == index ? nil : index
-                        }
-                        .id("\(window.pageNumber)-\(index)")
-                    }
+                    FindResultsView(documents: page.documents, columns: $resultColumns, inspectValue: { inspectedValue = $0 })
                     if page.documents.isEmpty { Text("No documents found.").foregroundStyle(.secondary) }
                     if !page.hasMore && !page.documents.isEmpty {
                         Text("End of this cursor.").font(.caption).foregroundStyle(.secondary)
@@ -261,6 +256,7 @@ private struct CollectionBrowserView: View {
                 }
             }
         }
+        .sheet(item: $inspectedValue) { ResultInspector(value: $0) }
         .navigationTitle(collection)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -298,7 +294,6 @@ private struct CollectionBrowserView: View {
         guard !isLoading else { return }
         isLoading = true
         message = nil
-        expandedRow = nil
         window.releasePage()
         pageTask = Task {
             defer {
@@ -331,62 +326,6 @@ private struct CollectionBrowserView: View {
         if let session { Task { await model.closeBrowsing(session) } }
         session = nil
         window.close()
-        expandedRow = nil
         self.message = message
-    }
-}
-
-private struct BrowseDocumentRow: View {
-    let document: JSONValue
-    let ordinal: Int
-    let isExpanded: Bool
-    let toggle: () -> Void
-    @State private var preview = ""
-    @State private var isTruncated = false
-
-    private var identifier: String {
-        guard case .object(let fields) = document, let value = fields["_id"] else { return "No _id field" }
-        return value.browseLabel
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button(action: toggle) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Document \(ordinal)").font(.caption).foregroundStyle(.secondary)
-                        Text(identifier).font(.system(.subheadline, design: .monospaced)).lineLimit(2)
-                    }
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            if isExpanded {
-                ScrollView(.horizontal) {
-                    Text(preview)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                }
-                .frame(maxHeight: 320)
-                if isTruncated {
-                    Text("Showing the first 16,384 characters. Copy includes the complete document.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                Button("Copy document") { UIPasteboard.general.string = document.prettyPrinted }
-                    .font(.caption)
-            }
-        }
-        .onChange(of: isExpanded, initial: true) { _, expanded in
-            if expanded {
-                let formatted = document.prettyPrinted
-                preview = String(formatted.prefix(16_384))
-                isTruncated = formatted.count > 16_384
-            } else {
-                preview = ""
-                isTruncated = false
-            }
-        }
     }
 }

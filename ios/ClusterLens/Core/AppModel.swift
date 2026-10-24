@@ -258,9 +258,7 @@ final class AppModel: ObservableObject {
             let end = min(offset + CollectionPage.maximumDocuments, count)
             let documents = (offset..<end).map { offsetIndex in
                 let index = session.query?.descending == true ? count - 1 - offsetIndex : offsetIndex
-                return JSONValue.object(["_id": .object(["$numberLong": .string(String(9_007_199_254_740_993 + index))]),
-                                  "item": .string("Fixture order \(index + 1)"),
-                                  "synthetic": .bool(true)])
+                return Self.fixtureDocument(index)
             }
             fixtureOffsets[session.id] = end < count ? end : nil
             return CollectionPage(documents: documents.map { Self.fixtureProjection($0, fields: session.query?.fields ?? []) }, hasMore: end < count, elapsedMS: 150)
@@ -297,8 +295,7 @@ final class AppModel: ObservableObject {
                 for offset in 0..<min(41, request.rowLimit) {
                     try Task.checkCancellation()
                     let index = request.query.descending ? 40 - offset : offset
-                    let document = JSONValue.object(["_id": .object(["$numberLong": .string(String(9_007_199_254_740_993 + index))]),
-                                                     "item": .string("Fixture order \(index + 1)"), "synthetic": .bool(true)])
+                    let document = Self.fixtureDocument(index)
                     try writer.write(Self.fixtureProjection(document, fields: request.query.fields))
                     progress(writer.rows, writer.bytes)
                     try await Task.sleep(for: .milliseconds(30))
@@ -320,9 +317,18 @@ final class AppModel: ObservableObject {
     }
 
     #if DEBUG
+    nonisolated private static func fixtureDocument(_ index: Int) -> JSONValue {
+        .object(["_id": .object(["$numberLong": .string(String(9_007_199_254_740_993 + index))]),
+                 "item": .string("Fixture order \(index + 1)"), "synthetic": .bool(true),
+                 "status": .string(index % 3 == 0 ? "Review" : "Ready"),
+                 "quantity": .object(["$numberInt": .string(String(index + 1))]),
+                 "customer": .object(["city": .string("Cedar Hill"), "phone": .null]),
+                 "tags": .array([.string("Fictional"), .string("Local fixture")])])
+    }
+
     nonisolated private static func fixtureProjection(_ document: JSONValue, fields: [String]) -> JSONValue {
-        // Synthetic schema has only top-level fields. Rejecting nested paths in
-        // fixture UI is preferable to pretending to emulate MongoDB array projection.
+        // The fixture projects top-level fields only. Nested-value inspection is local;
+        // this does not pretend to emulate MongoDB nested/array projection.
         guard !fields.isEmpty, case .object(let object) = document else { return document }
         return .object(object.filter { fields.contains($0.key) })
     }

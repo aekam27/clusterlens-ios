@@ -68,12 +68,26 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aekam.ClusterLensTests
+  ClusterLensUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - ClusterLensUITests
+    dependencies:
+      - target: ClusterLens
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aekam.ClusterLensUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: ClusterLens
 schemes:
   ClusterLens:
     build:
       targets:
         ClusterLens: all
         ClusterLensTests: [test]
+        ClusterLensUITests: [test]
     test:
       targets:
         - ClusterLensTests
+        - ClusterLensUITests

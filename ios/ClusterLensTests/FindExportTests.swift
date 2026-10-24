@@ -180,6 +180,36 @@ final class FindExportTests: XCTestCase {
     }
 
     #if !SWIFT_PACKAGE && DEBUG
+    @MainActor
+    func testResultsWorkspaceLayoutEvidence() async throws {
+        var documents: [JSONValue] = []
+        for index in 1...20 {
+            var fields: [String: JSONValue] = [:]
+            fields["_id"] = .object(["$oid": .string(String(format: "%024d", index))])
+            fields["item"] = .string("Cedar order \(index)")
+            fields["status"] = .string(index % 3 == 0 ? "Review" : "Ready")
+            fields["quantity"] = .object(["$numberLong": .string(String(index * 2))])
+            fields["customer"] = .object(["city": .string(index % 2 == 0 ? "Pine Bay" : "Cedar Hill")])
+            fields["tags"] = .array([.string("Fictional"), .string("Local fixture")])
+            documents.append(.object(fields))
+        }
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        let controller = UIHostingController(rootView: NavigationStack {
+            Form { Section("20 fictional documents · current page") { FindResultsView(documents: documents, columns: .constant(["item", "status", "quantity", "customer.city"])) } }
+                .navigationTitle("Results").navigationBarTitleDisplayMode(.inline)
+        })
+        window.rootViewController = controller; window.makeKeyAndVisible()
+        try await Task.sleep(nanoseconds: 400_000_000)
+        controller.view.layoutIfNeeded()
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "Results workspace — fictional records"
+        attachment.lifetime = .keepAlways; add(attachment)
+    }
+
     // Real production result component hosted with fictional data. This is a
     // layout attachment, not an end-to-end gesture or share-sheet test.
     @MainActor

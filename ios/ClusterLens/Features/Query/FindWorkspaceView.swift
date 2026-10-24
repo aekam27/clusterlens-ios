@@ -10,6 +10,8 @@ struct FindWorkspaceView: View {
     @State private var rawMode = false
     @State private var rawFilter = "{}"
     @State private var fields = ""
+    @State private var resultColumns: [String] = []
+    @State private var inspectedValue: InspectedValue?
     @State private var descending = false
     @State private var format: DataExportFormat = .json
     @State private var rowLimit = "1000"
@@ -116,12 +118,10 @@ struct FindWorkspaceView: View {
                 Button("Apply filter and preview") { preview(start: true) }.disabled(busy)
                 if let page = previewState.page {
                     Text("Page \(previewState.pageNumber) · \(page.documents.count) documents")
-                    ForEach(Array(page.documents.enumerated()), id: \.offset) { _, document in
-                        DisclosureGroup(document.browseLabelForDocument) {
-                            Text(String(document.prettyPrinted.prefix(16_384))).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
-                            if document.prettyPrinted.count > 16_384 { Text("Preview shortened; use export for the complete document.").font(.caption) }
-                        }
-                    }
+                    FindResultsView(documents: page.documents, columns: $resultColumns, useForQuery: { chosen in
+                        fields = chosen.joined(separator: ", ")
+                        message = "Column editor updated. Apply the filter or review an export to use these fields."
+                    }, inspectValue: { inspectedValue = $0 })
                     if page.documents.isEmpty { Text("No documents found.") }
                     if page.hasMore { Button("Next preview page") { preview(start: false) }.disabled(busy) }
                     else { Text("End of this cursor.").font(.caption) }
@@ -150,6 +150,7 @@ struct FindWorkspaceView: View {
         }
         .navigationTitle("Filter & export").navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
+        .sheet(item: $inspectedValue) { ResultInspector(value: $0) }
         .sheet(isPresented: $showsSavedQueries) {
             if let context = presetContext {
                 SavedFindPresetsView(context: context) { preset in loadPreset(preset, in: context) }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		015BF9C49C7EDD76882BE687 /* FindResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B92646E7A258B4ED20E9B8E /* FindResultsView.swift */; };
 		0BD5195D7977103934FFBF8B /* ConnectionManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503C6F0F9E14228CD097A393 /* ConnectionManagerView.swift */; };
 		1D052A99FA333856A1B77295 /* FindQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = B78B15D8C4676940E628A1F0 /* FindQuery.swift */; };
 		1DC85328BC2522D82EB16C72 /* DataExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3E7ED2A05680EBD2E7B016 /* DataExport.swift */; };
@@ -30,17 +31,27 @@
 		8A69C8766049FCBD3819A5EB /* BrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA88658B68633C55A9A7DFC4 /* BrowseView.swift */; };
 		98E4EF688F57C217D47C6B10 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125C8C3FFDEB00F7B8E405CA /* Theme.swift */; };
 		993B91D48966D5954870A8BF /* MongoCDriver.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DB81C07B8D0CF0D82F38B74 /* MongoCDriver.xcframework */; };
+		9AADFAE5E6F49BB31DEFBD23 /* ResultsWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501128E494805A66EB77E907 /* ResultsWorkflowTests.swift */; };
+		A62BD60523113D937D54E29C /* ResultProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D599C1B7A9C2DB5ACE4794 /* ResultProjectionTests.swift */; };
 		B733970DD893104DF4FD1428 /* OpenSSLiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D297146B6A1BBAE8267ECFC /* OpenSSLiOS.xcframework */; };
 		BD179881220EEEAEBA925A16 /* ClusterLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */; };
 		CBF8F1273BFF9E1E91C572E0 /* CollectionActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 740559154C96FB24D2BAAAE6 /* CollectionActionsView.swift */; };
 		D339426C920D7D1CBD6ED9C9 /* ClusterLensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */; };
 		D3849354D7ADC1DAF6F2A1B7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E679A959603140B8563E7F2 /* Models.swift */; };
+		D7A3AE60009C455B61117F71 /* ResultProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6ACC5B3AF6673B50159F0AF /* ResultProjection.swift */; };
 		EAE3B5B58F1178DF42503464 /* FindPresetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDFF4C55B14E07C573D66CC /* FindPresetTests.swift */; };
 		FA1313E4B9AAD7E64DCA2F17 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = D171B70B0B3B38FFE6E576A3 /* cacert.pem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		9EC5488ED82CF82E283CBE88 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DBBA611095A790B712A8B69F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B683DD4C496BB9D5EE748E8E;
+			remoteInfo = ClusterLens;
+		};
+		DA96862168176CDAA879CD0D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DBBA611095A790B712A8B69F /* Project object */;
 			proxyType = 1;
@@ -68,9 +79,12 @@
 		125C8C3FFDEB00F7B8E405CA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1349860EF9C439BCCB2132E3 /* QueryWorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryWorkbenchView.swift; sourceTree = "<group>"; };
 		1A3E7ED2A05680EBD2E7B016 /* DataExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExport.swift; sourceTree = "<group>"; };
+		2B92646E7A258B4ED20E9B8E /* FindResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindResultsView.swift; sourceTree = "<group>"; };
 		404C7ECAD6591F1176A233D8 /* FindExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindExportTests.swift; sourceTree = "<group>"; };
 		40AD8AFDEB6911335F957BB3 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		46250792C3541D7556F0D32D /* ClusterLensUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ClusterLensUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A21F9E8593E010B247517D7 /* ClusterLensTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ClusterLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		501128E494805A66EB77E907 /* ResultsWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsWorkflowTests.swift; sourceTree = "<group>"; };
 		503C6F0F9E14228CD097A393 /* ConnectionManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManagerView.swift; sourceTree = "<group>"; };
 		5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MongoConnectionString.swift; sourceTree = "<group>"; };
 		62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensTests.swift; sourceTree = "<group>"; };
@@ -88,7 +102,9 @@
 		9E679A959603140B8563E7F2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		AE79386A7CB6A3A71C641388 /* ClusterLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterLensApp.swift; sourceTree = "<group>"; };
 		B3056862CD3ED20CDC0FE55F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		B6ACC5B3AF6673B50159F0AF /* ResultProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultProjection.swift; sourceTree = "<group>"; };
 		B78B15D8C4676940E628A1F0 /* FindQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindQuery.swift; sourceTree = "<group>"; };
+		C0D599C1B7A9C2DB5ACE4794 /* ResultProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultProjectionTests.swift; sourceTree = "<group>"; };
 		C9CC5F83F348A1D9ED2FDBF7 /* MongoBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MongoBridge.h; sourceTree = "<group>"; };
 		D171B70B0B3B38FFE6E576A3 /* cacert.pem */ = {isa = PBXFileReference; path = cacert.pem; sourceTree = "<group>"; };
 		DD0AA3E24C40E482F50638F3 /* ClusterLens.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ClusterLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,6 +141,7 @@
 		227667E704A3D1919BE4BF22 /* Query */ = {
 			isa = PBXGroup;
 			children = (
+				2B92646E7A258B4ED20E9B8E /* FindResultsView.swift */,
 				7154ECFB616E1CF4EDFFCA99 /* FindWorkspaceView.swift */,
 				1349860EF9C439BCCB2132E3 /* QueryWorkbenchView.swift */,
 				6D7E384A5E61C1DF1302F73D /* SavedFindPresetsView.swift */,
@@ -163,6 +180,7 @@
 				C9CC5F83F348A1D9ED2FDBF7 /* MongoBridge.h */,
 				5ED9BD8CC36FBE466990882A /* MongoConnectionString.swift */,
 				9C23029E94896C861969DB84 /* MongoDirectClient.swift */,
+				B6ACC5B3AF6673B50159F0AF /* ResultProjection.swift */,
 				125C8C3FFDEB00F7B8E405CA /* Theme.swift */,
 			);
 			path = Core;
@@ -212,8 +230,17 @@
 			children = (
 				DD0AA3E24C40E482F50638F3 /* ClusterLens.app */,
 				4A21F9E8593E010B247517D7 /* ClusterLensTests.xctest */,
+				46250792C3541D7556F0D32D /* ClusterLensUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DA9C6266FDD54C93DBC91B05 /* ClusterLensUITests */ = {
+			isa = PBXGroup;
+			children = (
+				501128E494805A66EB77E907 /* ResultsWorkflowTests.swift */,
+			);
+			path = ClusterLensUITests;
 			sourceTree = "<group>";
 		};
 		E25905DFA07FEFC31D2FFFDA /* Setup */ = {
@@ -237,6 +264,7 @@
 			children = (
 				0A807BBAD0B78D548C95805E /* ClusterLens */,
 				FC920F7DDF8F1FB5A08AF231 /* ClusterLensTests */,
+				DA9C6266FDD54C93DBC91B05 /* ClusterLensUITests */,
 				D0AE4369DD688ED0AF9185B5 /* Frameworks */,
 				D9218D367668A17D972E526D /* Products */,
 			);
@@ -248,6 +276,7 @@
 				62C1268CDA861F64BBDEA989 /* ClusterLensTests.swift */,
 				404C7ECAD6591F1176A233D8 /* FindExportTests.swift */,
 				FEDFF4C55B14E07C573D66CC /* FindPresetTests.swift */,
+				C0D599C1B7A9C2DB5ACE4794 /* ResultProjectionTests.swift */,
 			);
 			path = ClusterLensTests;
 			sourceTree = "<group>";
@@ -264,6 +293,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		35B114E0319581CDB79F87C3 /* ClusterLensUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B53AA2A0C45B5812C7A6ADBE /* Build configuration list for PBXNativeTarget "ClusterLensUITests" */;
+			buildPhases = (
+				A73C07E458608AAFD0FF2FFB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C216F034A41F382C3AF2BC65 /* PBXTargetDependency */,
+			);
+			name = ClusterLensUITests;
+			packageProductDependencies = (
+			);
+			productName = ClusterLensUITests;
+			productReference = 46250792C3541D7556F0D32D /* ClusterLensUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		81369D21A4B8A49152B1B6A3 /* ClusterLensTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F7D4F62E8D6189CA699EE0EA /* Build configuration list for PBXNativeTarget "ClusterLensTests" */;
@@ -311,6 +358,11 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					35B114E0319581CDB79F87C3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = B683DD4C496BB9D5EE748E8E;
+					};
 					81369D21A4B8A49152B1B6A3 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -337,6 +389,7 @@
 			targets = (
 				B683DD4C496BB9D5EE748E8E /* ClusterLens */,
 				81369D21A4B8A49152B1B6A3 /* ClusterLensTests */,
+				35B114E0319581CDB79F87C3 /* ClusterLensUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -361,6 +414,7 @@
 				D339426C920D7D1CBD6ED9C9 /* ClusterLensTests.swift in Sources */,
 				30453D1DBC499CE59F1898A3 /* FindExportTests.swift in Sources */,
 				EAE3B5B58F1178DF42503464 /* FindPresetTests.swift in Sources */,
+				A62BD60523113D937D54E29C /* ResultProjectionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +430,7 @@
 				1DC85328BC2522D82EB16C72 /* DataExport.swift in Sources */,
 				2EC00289D7644837CF16CDC3 /* FindPresetStore.swift in Sources */,
 				1D052A99FA333856A1B77295 /* FindQuery.swift in Sources */,
+				015BF9C49C7EDD76882BE687 /* FindResultsView.swift in Sources */,
 				2EA229B05CB170A7CE85D8AE /* FindWorkspaceView.swift in Sources */,
 				50C6C1078C3EA003A8F48F31 /* HistoryView.swift in Sources */,
 				64915B94235EDEF50688ABED /* JSONValue.swift in Sources */,
@@ -386,6 +441,7 @@
 				53CA5B632A17B8A14020A7DA /* MongoConnectionString.swift in Sources */,
 				821089F57678FA96112A7DDE /* MongoDirectClient.swift in Sources */,
 				58C089AE8197A8C93EA8F340 /* QueryWorkbenchView.swift in Sources */,
+				D7A3AE60009C455B61117F71 /* ResultProjection.swift in Sources */,
 				71729ECF9FEABD3DCC9A7FF3 /* SavedFindPresetsView.swift in Sources */,
 				78EB4A66AA35761DAB87BADA /* SettingsView.swift in Sources */,
 				46AD990FD5AC10D79C284F08 /* SetupView.swift in Sources */,
@@ -393,9 +449,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A73C07E458608AAFD0FF2FFB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AADFAE5E6F49BB31DEFBD23 /* ResultsWorkflowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		C216F034A41F382C3AF2BC65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B683DD4C496BB9D5EE748E8E /* ClusterLens */;
+			targetProxy = DA96862168176CDAA879CD0D /* PBXContainerItemProxy */;
+		};
 		FBC54B31901BFBA96876AD20 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B683DD4C496BB9D5EE748E8E /* ClusterLens */;
@@ -512,6 +581,23 @@
 			};
 			name = Release;
 		};
+		867EEE5ED782F71808FD2116 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLensUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ClusterLens;
+			};
+			name = Release;
+		};
 		877CD9BC8FBCDFB0CA287EAE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -525,6 +611,23 @@
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClusterLens.app/ClusterLens";
+			};
+			name = Debug;
+		};
+		A48CEB5468350C1AEDD33C68 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aekam.ClusterLensUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ClusterLens;
 			};
 			name = Debug;
 		};
@@ -626,6 +729,15 @@
 			buildConfigurations = (
 				01DC0E6DFFD3DF16506C3BF0 /* Debug */,
 				3076E18953D19A4FAFC0D3AF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B53AA2A0C45B5812C7A6ADBE /* Build configuration list for PBXNativeTarget "ClusterLensUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A48CEB5468350C1AEDD33C68 /* Debug */,
+				867EEE5ED782F71808FD2116 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
